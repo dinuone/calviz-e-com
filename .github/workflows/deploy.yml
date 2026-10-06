@@ -1,0 +1,77 @@
+name: Build & Deploy Frontend Storefront
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/dinuone/calviz-frontend
+
+jobs:
+  build-and-push:
+    name: Build & Push Frontend Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://api.calviz.lk' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy Frontend to Lightsail
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Update Frontend Container on Lightsail
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER || 'ubuntu' }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: ${{ secrets.LIGHTSAIL_PORT || 22 }}
+          script: |
+            set -e
+            cd /home/ubuntu/calviz
+
+            echo "==> Authenticating Docker to GitHub Container Registry..."
+            echo "${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            echo "==> Pulling latest Frontend image..."
+            docker compose pull calviz-frontend
+
+            echo "==> Restarting Frontend container..."
+            docker compose up -d --no-deps calviz-frontend
+
+            echo "==> Cleaning old dangling images..."
+            docker image prune -f
+
+            echo "==> Frontend deployment successful!"
+            docker compose ps calviz-frontend
