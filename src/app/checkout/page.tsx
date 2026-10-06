@@ -9,6 +9,7 @@ import { useCartStore } from "@/lib/store/useCartStore";
 import { createOrder, fetchCheckoutConfig, validatePromoCode } from "@/lib/api";
 import { validateSafePlainText } from "@/lib/sanitizer";
 import { PaymentMethod, CheckoutConfig, City, PromoValidationResult } from "@/types";
+import OrderSuccessCelebration from "@/components/OrderSuccessCelebration";
 import {
   ShoppingBag,
   ShieldCheck,
@@ -61,6 +62,16 @@ export default function CheckoutPage() {
   const [validatingPromo, setValidatingPromo] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
+
+  // Completed order state for animated celebration modal
+  const [completedOrder, setCompletedOrder] = useState<{
+    orderId: string;
+    orderNumber?: string;
+    customerName: string;
+    totalAmount: number;
+    paymentMethod: string;
+    itemCount: number;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -268,8 +279,15 @@ export default function CheckoutPage() {
       // Clear the cart on successful placement
       clearCart();
 
-      // Redirect to confirmation / tracking page
-      router.push(`/orders/${response.orderId}`);
+      // Trigger rich animated celebration screen
+      setCompletedOrder({
+        orderId: response.orderId,
+        orderNumber: response.orderNumber,
+        customerName: `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim(),
+        totalAmount: totalAmount,
+        paymentMethod: formData.paymentMethod,
+        itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to place order. Please try again.";
       setErrorMessage(msg);
@@ -990,6 +1008,18 @@ export default function CheckoutPage() {
           </div>
         )}
       </main>
+
+      {/* Animated Order Success Celebration Modal */}
+      {completedOrder && (
+        <OrderSuccessCelebration
+          orderId={completedOrder.orderId}
+          orderNumber={completedOrder.orderNumber}
+          customerName={completedOrder.customerName}
+          totalAmount={completedOrder.totalAmount}
+          paymentMethod={completedOrder.paymentMethod}
+          itemCount={completedOrder.itemCount}
+        />
+      )}
 
       <Footer />
     </div>

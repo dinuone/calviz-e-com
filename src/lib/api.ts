@@ -27,7 +27,7 @@ export function getMediaUrl(url?: string | null): string {
 export async function fetchProducts(categoryId?: string): Promise<ProductSummary[]> {
   try {
     const url = new URL(`${API_BASE}/products`);
-    if (categoryId && categoryId !== "all") {
+    if (categoryId && categoryId !== "all" && categoryId !== "featured") {
       url.searchParams.append("category", categoryId);
     }
     const res = await fetch(url.toString(), {

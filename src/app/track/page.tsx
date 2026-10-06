@@ -61,8 +61,12 @@ function TrackingContent() {
 
   // Perform search
   const performLookup = async (identifier: string, contact?: string) => {
-    const clean = identifier.trim();
-    if (!clean) return;
+    const cleanId = identifier.trim();
+    const contactParam = (contact !== undefined ? contact : contactQuery).trim();
+    if (!cleanId && !contactParam) return;
+
+    const mainIdentifier = cleanId || contactParam;
+    const secondaryContact = cleanId && contactParam ? contactParam : undefined;
 
     try {
       setLoading(true);
@@ -70,12 +74,11 @@ function TrackingContent() {
       setSlipSuccess(null);
       setSlipError(null);
 
-      const contactParam = (contact !== undefined ? contact : contactQuery).trim();
-      const result = await trackOrder(clean, contactParam || undefined);
+      const result = await trackOrder(mainIdentifier, secondaryContact);
       if (result) {
         setOrder(result);
-        setActiveIdentifier(clean);
-        setActiveContact(contactParam);
+        setActiveIdentifier(mainIdentifier);
+        setActiveContact(secondaryContact || "");
         setLastRefreshedAt(new Date());
 
         if (String(result.paymentMethod).toLowerCase().includes("bank")) {
@@ -83,7 +86,7 @@ function TrackingContent() {
         }
       } else {
         setOrder(null);
-        setError(`No active order found matching "${clean}". If searching by Order Number, please also provide the associated phone number or email for security verification.`);
+        setError(`No active ongoing order found matching "${mainIdentifier}". Note: Completed or delivered orders are archived from active tracking.`);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to retrieve order tracking information.";
@@ -95,9 +98,10 @@ function TrackingContent() {
   };
 
   useEffect(() => {
-    if (initialQuery) {
+    if (initialQuery || initialContact) {
       setSearchQuery(initialQuery);
-      performLookup(initialQuery, initialContact);
+      setContactQuery(initialContact);
+      performLookup(initialQuery || initialContact, initialQuery && initialContact ? initialContact : undefined);
     }
   }, [initialQuery, initialContact]);
 
@@ -115,13 +119,23 @@ function TrackingContent() {
     }, 12000);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, activeIdentifier, order]);
+  }, [autoRefresh, activeIdentifier, activeContact, order]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.replace(`/track?query=${encodeURIComponent(searchQuery.trim())}`);
-    performLookup(searchQuery.trim());
+    const cleanSearch = searchQuery.trim();
+    const cleanContact = contactQuery.trim();
+    if (!cleanSearch && !cleanContact) return;
+
+    const mainId = cleanSearch || cleanContact;
+    const secContact = cleanSearch && cleanContact ? cleanContact : "";
+
+    router.replace(
+      `/track?query=${encodeURIComponent(mainId)}${
+        secContact ? `&contact=${encodeURIComponent(secContact)}` : ""
+      }`
+    );
+    performLookup(mainId, secContact || undefined);
   };
 
   const handleCopyLink = () => {
@@ -244,7 +258,7 @@ function TrackingContent() {
             Track Your Calviz Drop
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 mb-6">
-            Enter your Order Number (e.g. <span className="text-white font-mono font-bold">CLV-2610-9364</span>), Order Reference ID, or Contact Phone Number to inspect live package dispatch status.
+            Enter your Order Number (e.g. <span className="text-white font-mono font-bold">CLV-2610-9364</span>), Contact Phone Number, or Email to inspect live package dispatch status.
           </p>
 
           <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
@@ -254,7 +268,7 @@ function TrackingContent() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Order Number (e.g. CLV-2610-9364)"
+                placeholder="Order Number, Phone or Email"
                 className="w-full pl-10 pr-4 py-3 bg-neutral-900 border border-neutral-700 text-white text-xs font-mono placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"
               />
             </div>
@@ -264,14 +278,14 @@ function TrackingContent() {
                 type="text"
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
-                placeholder="Phone or Email (verification)"
+                placeholder="Phone or Email (optional)"
                 className="w-full pl-10 pr-4 py-3 bg-neutral-900 border border-neutral-700 text-white text-xs font-mono placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"
               />
             </div>
             <button
               type="submit"
-              disabled={loading || !searchQuery.trim()}
-              className="px-6 py-3 bg-white text-black text-xs font-bold font-mono uppercase tracking-wider hover:bg-neutral-200 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shrink-0"
+              disabled={loading || (!searchQuery.trim() && !contactQuery.trim())}
+              className="px-6 py-3 bg-white text-black text-xs font-bold font-mono uppercase tracking-wider hover:bg-neutral-200 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shrink-0 cursor-pointer"
             >
               {loading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />

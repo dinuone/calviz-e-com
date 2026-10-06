@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -112,7 +112,7 @@ export default function HomePage() {
   // Catalog API State
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("featured");
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -241,7 +241,7 @@ export default function HomePage() {
     setLoadingProducts(true);
     setApiError(null);
     try {
-      const items = await fetchProducts(catSlug);
+      const items = await fetchProducts(catSlug === "featured" || catSlug === "all" ? undefined : catSlug);
       setProducts(items);
 
       // Pre-select default sizes
@@ -267,6 +267,23 @@ export default function HomePage() {
   useEffect(() => {
     loadProducts(selectedCategory);
   }, [selectedCategory, loadProducts]);
+
+  // Filter products: Show Featured Products by default when "featured" is active
+  const displayedProducts = useMemo(() => {
+    if (selectedCategory === "featured") {
+      const featured = products.filter((p) => p.isFeatured);
+      // If admin marked some products as featured, only show them by default
+      return featured.length > 0 ? featured : products;
+    }
+    if (selectedCategory === "all") {
+      return products;
+    }
+    return products.filter(
+      (p) =>
+        p.categorySlug?.toLowerCase() === selectedCategory.toLowerCase() ||
+        p.categoryId?.toLowerCase() === selectedCategory.toLowerCase()
+    );
+  }, [products, selectedCategory]);
 
   // 3. Auto-play Carousel
   useEffect(() => {
@@ -402,101 +419,95 @@ export default function HomePage() {
       <main className="w-full pt-24 bg-white">
         <div className="flex flex-col w-full">
           <section className="relative w-full bg-[#fdfdfd] border-b border-neutral-200/60 overflow-hidden" id="hero-section">
-            {/* Ambient Architectural Background Watermark Highlighted with Multi-Layered Shadows */}
+            {/* Ambient Architectural Background Watermark */}
             <div
               aria-hidden="true"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none font-black text-[19vw] leading-none tracking-tighter text-neutral-200/90 z-0 select-none transition-all duration-700"
+              className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none font-black text-[18vw] leading-none tracking-tighter text-neutral-100/90 z-0 transition-all duration-700"
               style={{
-                textShadow: "0 1px 3px rgba(255, 255, 255, 0.9), 0 10px 25px rgba(0, 0, 0, 0.09), 0 25px 50px rgba(0, 0, 0, 0.07), 0 45px 90px rgba(0, 0, 0, 0.04)",
-                filter: "drop-shadow(0 20px 30px rgba(0, 0, 0, 0.08)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.04))",
                 letterSpacing: "-0.04em"
               }}
             >
               CALVIZ
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 md:pt-8 md:pb-16 lg:pt-10 lg:pb-20">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10 md:pt-8 md:pb-16 lg:pt-10 lg:pb-20">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
 
-                {/* Left Column: Minimal Typography & Storytelling */}
-                <div className="lg:col-span-6 space-y-8">
-                  {/* Micro Metadata Header */}
-                  <div className="flex items-center gap-3 text-[11px] font-mono tracking-widest text-neutral-400 uppercase">
-                    <span className="w-2 h-2 rounded-full bg-black inline-block" />
-                    <span>{heroConfig?.badgeText || "CAPSULE DROP 01"}</span>
-                    <span className="text-neutral-300">•</span>
-                    <span>{heroConfig?.locationText || "COLOMBO 6.9271° N, 79.8612° E"}</span>
+                {/* Left Column: High-Impact Luxury Typography & Storytelling */}
+                <div className="lg:col-span-6 space-y-6 sm:space-y-8">
+                  {/* Clean Micro Capsule Badge */}
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 border border-neutral-200/80 rounded-full text-[10px] sm:text-[11px] font-mono tracking-wider text-neutral-800 uppercase shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-bold">{heroConfig?.badgeText || "DROP 01 // ARCHIVAL CAPSULE"}</span>
+                    {heroConfig?.locationText && (
+                      <>
+                        <span className="text-neutral-300 hidden sm:inline">•</span>
+                        <span className="text-neutral-500 hidden sm:inline">{heroConfig.locationText}</span>
+                      </>
+                    )}
                   </div>
 
-                  {/* Minimalist Monumental Title */}
-                  <div className="space-y-3">
-                    <h1 className="text-4xl sm:text-6xl lg:text-[68px] font-black uppercase tracking-tight text-neutral-950 leading-[0.92]">
-                      <span className="block calviz-mask">
-                        <span className="calviz-anim-1">
-                          {heroConfig?.titleLine1 || "ARCHITECTURAL"}
-                        </span>
+                  {/* Impactful Architectural Title */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <h1 className="text-3xl sm:text-5xl lg:text-[62px] font-black uppercase tracking-tight text-neutral-950 leading-[1.02] sm:leading-[0.96]">
+                      <span className="block tracking-tight text-neutral-950">
+                        {heroConfig?.titleLine1 || "ARCHITECTURAL"}
                       </span>
-                      <span className="block calviz-mask font-serif font-normal italic text-neutral-500 lowercase">
-                        <span className="calviz-anim-2">
-                          {heroConfig?.titleLine2 || "silhouette."}
-                        </span>
+                      <span className="block tracking-tight text-neutral-800">
+                        {heroConfig?.titleLine2 || "SILHOUETTE"}
                       </span>
-                      <span className="block calviz-mask text-neutral-900">
-                        <span className="calviz-anim-3">
-                          {heroConfig?.titleLine3 || "HEAVYWEIGHT WEAVE."}
-                        </span>
+                      <span className="block tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-500 bg-clip-text text-transparent">
+                        {heroConfig?.titleLine3 || "240 GSM HEAVYWEIGHT."}
                       </span>
                     </h1>
-                    <p className="text-xs sm:text-sm text-neutral-600 font-mono max-w-md leading-relaxed pt-2">
+                    <p className="text-xs sm:text-sm text-neutral-600 max-w-md leading-relaxed font-normal">
                       {heroConfig?.description ||
                         "Structured boxy proportions cut from custom-milled organic combed cotton with tension-locked anti-sag collar ribbing."}
                     </p>
                   </div>
 
-                  {/* Minimal Action Controls */}
-                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                  {/* Action Controls */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
                     <a
                       href={heroConfig?.primaryButtonUrl || "#catalog"}
-                      className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-xs font-mono font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all shadow-sm group"
+                      className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-black text-white text-xs font-mono font-bold uppercase tracking-widest hover:bg-neutral-800 active:scale-[0.98] transition-all shadow-md group cursor-pointer"
                     >
-                      <span>{heroConfig?.primaryButtonText || "EXPLORE COLLECTION"}</span>
+                      <span>{heroConfig?.primaryButtonText || "EXPLORE CAPSULE"}</span>
                       <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </a>
 
                     <Link
                       href={heroConfig?.secondaryButtonUrl || "/track"}
-                      className="inline-flex items-center gap-2 px-6 py-4 text-xs font-mono uppercase tracking-wider text-neutral-700 hover:text-black transition-colors"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3.5 sm:py-4 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200/80 text-xs font-mono font-bold uppercase tracking-wider text-neutral-800 transition-colors cursor-pointer"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="underline underline-offset-4">
-                        {heroConfig?.secondaryButtonText || "TRACK ORDER"}
-                      </span>
+                      <span>{heroConfig?.secondaryButtonText || "TRACK ORDER"}</span>
                     </Link>
                   </div>
 
-                  {/* Minimal Spec Metric List */}
-                  <div className="pt-8 border-t border-neutral-200/80 grid grid-cols-3 gap-6 text-neutral-800">
-                    <div>
-                      <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">
+                  {/* Refined Spec Metric Cards */}
+                  <div className="pt-6 sm:pt-8 border-t border-neutral-200/80 grid grid-cols-3 gap-2.5 sm:gap-6 text-neutral-800">
+                    <div className="bg-neutral-50 sm:bg-transparent p-3 sm:p-0 rounded border border-neutral-200/60 sm:border-0 text-center sm:text-left">
+                      <span className="text-[9px] sm:text-[10px] font-mono text-neutral-500 uppercase tracking-wider block">
                         {heroConfig?.spec1Label || "FABRIC DENSITY"}
                       </span>
-                      <span className="text-sm font-bold font-mono text-black mt-0.5 block">
-                        {heroConfig?.spec1Value || "HEAVYWEIGHT"}
+                      <span className="text-xs sm:text-sm font-black font-mono text-black mt-0.5 block">
+                        {heroConfig?.spec1Value || "240 GSM"}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">
+                    <div className="bg-neutral-50 sm:bg-transparent p-3 sm:p-0 rounded border border-neutral-200/60 sm:border-0 text-center sm:text-left">
+                      <span className="text-[9px] sm:text-[10px] font-mono text-neutral-500 uppercase tracking-wider block">
                         {heroConfig?.spec2Label || "COLLAR SPEC"}
                       </span>
-                      <span className="text-sm font-bold font-mono text-black mt-0.5 block">
+                      <span className="text-xs sm:text-sm font-black font-mono text-black mt-0.5 block">
                         {heroConfig?.spec2Value || "ZERO-SAG"}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">
+                    <div className="bg-neutral-50 sm:bg-transparent p-3 sm:p-0 rounded border border-neutral-200/60 sm:border-0 text-center sm:text-left">
+                      <span className="text-[9px] sm:text-[10px] font-mono text-neutral-500 uppercase tracking-wider block">
                         {heroConfig?.spec3Label || "LIMITED RUN"}
                       </span>
-                      <span className="text-sm font-bold font-mono text-black mt-0.5 block">
+                      <span className="text-xs sm:text-sm font-black font-mono text-black mt-0.5 block">
                         {heroConfig?.spec3Value || "250 UNITS"}
                       </span>
                     </div>
@@ -627,7 +638,7 @@ export default function HomePage() {
                   <span className="font-mono text-[11px] text-neutral-600 font-medium hidden sm:inline">
                     {loadingProducts
                       ? "FETCHING TELEMETRY..."
-                      : `SHOWING ${products.length} ALLOCATED STYLES`}
+                      : `SHOWING ${displayedProducts.length} ALLOCATED STYLES`}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
@@ -648,6 +659,16 @@ export default function HomePage() {
 
                   {/* Filter Pills */}
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => setSelectedCategory("featured")}
+                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${selectedCategory === "featured"
+                        ? "bg-black text-white"
+                        : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
+                        }`}
+                    >
+                      FEATURED EDITIONS
+                    </button>
+
                     <button
                       onClick={() => setSelectedCategory("all")}
                       className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${selectedCategory === "all"
@@ -708,7 +729,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   ))
-                  : products.map((product) => {
+                  : displayedProducts.map((product) => {
                     const metrics = getProductMetrics(product);
                     const currentSelectedSize =
                       selectedSizes[product.id] ||
