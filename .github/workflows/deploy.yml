@@ -38,7 +38,7 @@ jobs:
           file: ./Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://api.calviz.lk' }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://api.calviz.lk/api' }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
