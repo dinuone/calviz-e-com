@@ -1,0 +1,853 @@
+"use client";
+
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useCartStore } from "@/lib/store/useCartStore";
+import { fetchProducts, fetchCategories, fetchColors } from "@/lib/api";
+import { ProductSummary, Category, ColorAttribute } from "@/types";
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  ChevronDown,
+  ShoppingBag,
+  Heart,
+  Layers,
+  Sparkles,
+  ArrowRight,
+  Check,
+  RotateCcw,
+  LayoutGrid,
+  Grid2X2,
+  Filter,
+  CheckCircle2,
+  Truck,
+  ShieldCheck
+} from "lucide-react";
+
+function ShopProductsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const initialCat = searchParams.get("category") || "all";
+  const initialSearch = searchParams.get("search") || "";
+  const initialSize = searchParams.get("size") || "all";
+  const initialColor = searchParams.get("color") || "all";
+  const initialSort = searchParams.get("sort") || "featured";
+
+  // Data State
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [colors, setColors] = useState<ColorAttribute[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filter & Search State
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCat);
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  const [selectedSize, setSelectedSize] = useState<string>(initialSize);
+  const [selectedColor, setSelectedColor] = useState<string>(initialColor);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<string>(initialSort);
+  const [priceLimit, setPriceLimit] = useState<number>(15000);
+
+  // Layout View Mode (4 columns vs 2 columns)
+  const [viewCols, setViewCols] = useState<3 | 4>(4);
+
+  // Mobile Filter Drawer State
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  // Selected Sizes State (map of productId -> size)
+  const [selectedSizes, setSelectedSizes] = useState<{ [key: string]: string }>({});
+
+  // Wishlist state (map of productId -> boolean)
+  const [wishlist, setWishlist] = useState<{ [key: string]: boolean }>({});
+
+  // Cart store
+  const { addItem, openCart } = useCartStore();
+
+  // Load initial data
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        const [cats, cols, prods] = await Promise.all([
+          fetchCategories(),
+          fetchColors(),
+          fetchProducts(),
+        ]);
+        setCategories(cats);
+        setColors(cols);
+        setProducts(prods);
+
+        // Pre-select default sizes
+        setSelectedSizes((prev) => {
+          const updated = { ...prev };
+          prods.forEach((item) => {
+            if (!updated[item.id] && item.availableSizes?.length) {
+              updated[item.id] = item.availableSizes.includes("M")
+                ? "M"
+                : item.availableSizes[0];
+            }
+          });
+          return updated;
+        });
+      } catch (err) {
+        console.error("Failed to load catalog data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Update URL Query params on filter changes
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== "all") params.set("category", selectedCategory);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    if (selectedSize && selectedSize !== "all") params.set("size", selectedSize);
+    if (selectedColor && selectedColor !== "all") params.set("color", selectedColor);
+    if (sortBy && sortBy !== "featured") params.set("sort", sortBy);
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `/products?${queryString}` : "/products";
+    router.replace(newUrl, { scroll: false });
+  }, [selectedCategory, searchQuery, selectedSize, selectedColor, sortBy, router]);
+
+  // All available unique sizes across catalog
+  const availableSizesList = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      p.availableSizes?.forEach((s) => set.add(s.toUpperCase()));
+    });
+    const order = ["XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL"];
+    return Array.from(set).sort((a, b) => {
+      const idxA = order.indexOf(a);
+      const idxB = order.indexOf(b);
+      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+    });
+  }, [products]);
+
+  // Filtered and sorted products calculation
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => {
+        // Category Filter
+        if (selectedCategory !== "all") {
+          const matchSlug = p.categorySlug === selectedCategory;
+          const matchId = p.categoryId === selectedCategory;
+          const matchName = p.categoryName?.toLowerCase() === selectedCategory.toLowerCase();
+          if (!matchSlug && !matchId && !matchName) return false;
+        }
+
+        // Search Query Filter
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchName = p.name.toLowerCase().includes(q);
+          const matchSlug = p.slug.toLowerCase().includes(q);
+          const matchCat = p.categoryName?.toLowerCase().includes(q);
+          const matchGsm = p.gsm ? `${p.gsm}`.includes(q) : false;
+          if (!matchName && !matchSlug && !matchCat && !matchGsm) return false;
+        }
+
+        // Size Filter
+        if (selectedSize !== "all") {
+          const hasSize = p.availableSizes?.some(
+            (s) => s.toUpperCase() === selectedSize.toUpperCase()
+          );
+          if (!hasSize) return false;
+        }
+
+        // Color Filter
+        if (selectedColor !== "all") {
+          const hasColor = p.availableColors?.some(
+            (c) => c.toLowerCase() === selectedColor.toLowerCase()
+          );
+          if (!hasColor) return false;
+        }
+
+        // In-Stock Only
+        const totalStock =
+          typeof p.totalStock === "number"
+            ? p.totalStock
+            : p.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) ?? 0;
+        if (inStockOnly && totalStock <= 0) return false;
+
+        // Price Limit
+        if (p.basePrice > priceLimit) return false;
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === "price-low") return a.basePrice - b.basePrice;
+        if (sortBy === "price-high") return b.basePrice - a.basePrice;
+        if (sortBy === "gsm-high") return (b.gsm || 0) - (a.gsm || 0);
+        if (sortBy === "newest") return b.slug.localeCompare(a.slug);
+        return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+      });
+  }, [products, selectedCategory, searchQuery, selectedSize, selectedColor, inStockOnly, priceLimit, sortBy]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCategory !== "all") count++;
+    if (searchQuery.trim()) count++;
+    if (selectedSize !== "all") count++;
+    if (selectedColor !== "all") count++;
+    if (inStockOnly) count++;
+    if (priceLimit < 15000) count++;
+    return count;
+  }, [selectedCategory, searchQuery, selectedSize, selectedColor, inStockOnly, priceLimit]);
+
+  const handleResetFilters = () => {
+    setSelectedCategory("all");
+    setSearchQuery("");
+    setSelectedSize("all");
+    setSelectedColor("all");
+    setInStockOnly(false);
+    setPriceLimit(15000);
+    setSortBy("featured");
+  };
+
+  const handleSelectSize = (productId: string, size: string) => {
+    setSelectedSizes((prev) => ({ ...prev, [productId]: size }));
+  };
+
+  const toggleWishlist = (productId: string) => {
+    setWishlist((prev) => ({ ...prev, [productId]: !prev[productId] }));
+  };
+
+  const handleAddToBag = (product: ProductSummary) => {
+    const stock =
+      typeof product.totalStock === "number"
+        ? product.totalStock
+        : (product.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) ?? 0);
+
+    if (stock <= 0) return;
+
+    const size = selectedSizes[product.id] || product.availableSizes?.[0] || "M";
+    const color = product.availableColors?.[0] || "Monochrome";
+    const imageUrl = product.primaryImageUrl || product.images?.[0]?.imageUrl;
+
+    const matchedVariant =
+      product.variants?.find((v) => v.size.toUpperCase() === size.toUpperCase()) || product.variants?.[0];
+
+    const actualVariantId = matchedVariant?.id ? String(matchedVariant.id) : `${product.id}-${size}`;
+
+    addItem({
+      variantId: actualVariantId,
+      productId: product.id,
+      productName: product.name,
+      slug: product.slug,
+      size: matchedVariant?.size || size,
+      color: matchedVariant?.color || color,
+      unitPrice: Number(product.basePrice) + (matchedVariant?.priceAdjustment || 0),
+      quantity: 1,
+      imageUrl: imageUrl,
+      maxStock: matchedVariant ? matchedVariant.stockQuantity : stock,
+    });
+    openCart();
+  };
+
+  const getProductMetrics = (product: ProductSummary) => {
+    const stock =
+      typeof product.totalStock === "number"
+        ? product.totalStock
+        : (product.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) ?? 0);
+
+    const isOutOfStock = stock <= 0;
+    const isUrgent = stock > 0 && stock <= 10;
+
+    let badge = "NEW DROP";
+    if (isOutOfStock) {
+      badge = "SOLD OUT";
+    } else if (isUrgent) {
+      badge = "FEW UNITS LEFT";
+    } else if (product.isFeatured) {
+      badge = "FEATURED";
+    }
+
+    return { badge, isUrgent, isOutOfStock, stock };
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Editorial Header Banner */}
+      <div className="bg-neutral-950 text-white p-6 sm:p-10 border border-neutral-800 shadow-xl relative overflow-hidden">
+        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-neutral-300 text-[10px] font-mono uppercase tracking-widest mb-4 border border-white/10">
+            <Layers className="w-3 h-3 text-white" />
+            <span>CALVIZ ARCHIVAL DROP REGISTER</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-2">
+            All Products
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-400 font-mono leading-relaxed">
+            Engineered heavyweight combed cotton apparel. Custom-milled organic weaves, boxy structural cuts, and reinforced anti-sag collars crafted for the tropics.
+          </p>
+
+          {/* Quick Stats Bar */}
+          <div className="mt-6 pt-6 border-t border-neutral-800/80 flex flex-wrap gap-6 text-xs font-mono">
+            <div>
+              <span className="text-neutral-500 uppercase text-[10px] block">TOTAL ARCHIVAL PIECES</span>
+              <span className="text-white font-bold">{products.length} Drops Active</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 uppercase text-[10px] block">ISLAND-WIDE DISPATCH</span>
+              <span className="text-emerald-400 font-bold">LKR 300 Flat Courier</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 uppercase text-[10px] block">FABRIC STANDARD</span>
+              <span className="text-white font-bold">Heavyweight Combed Cotton</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Catalog Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Desktop Sidebar Filters (3 Cols) */}
+        <aside className="hidden lg:block lg:col-span-3 space-y-6 sticky top-28 bg-white border border-neutral-200 p-6 shadow-xs">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-black" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-black">
+                Filters &amp; Facets
+              </h2>
+            </div>
+            {activeFiltersCount > 0 && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-[11px] font-mono text-neutral-500 hover:text-black uppercase flex items-center gap-1 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset ({activeFiltersCount})
+              </button>
+            )}
+          </div>
+
+          {/* Search Box */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-mono uppercase text-neutral-500 block">Search Drops</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search drops..."
+                className="w-full pl-9 pr-3 py-2 bg-neutral-50 border border-neutral-200 text-xs font-mono placeholder:text-neutral-400 focus:outline-none focus:border-black"
+              />
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-mono uppercase text-neutral-500 block">Category</label>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("all")}
+                className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded transition-colors flex items-center justify-between ${selectedCategory === "all"
+                  ? "bg-black text-white font-bold"
+                  : "text-neutral-700 hover:bg-neutral-100"
+                  }`}
+              >
+                <span>All Categories</span>
+                <span>{products.length}</span>
+              </button>
+              {categories.map((cat) => {
+                const count = products.filter(
+                  (p) => p.categorySlug === cat.slug || p.categoryId === cat.id
+                ).length;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.slug || cat.id)}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded transition-colors flex items-center justify-between ${selectedCategory === cat.slug || selectedCategory === cat.id
+                      ? "bg-black text-white font-bold"
+                      : "text-neutral-700 hover:bg-neutral-100"
+                      }`}
+                  >
+                    <span className="truncate">{cat.name}</span>
+                    <span className="text-[10px] opacity-70">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Size Filter */}
+          <div className="space-y-2 pt-2 border-t border-neutral-100">
+            <label className="text-[11px] font-mono uppercase text-neutral-500 block">Size Profile</label>
+            <div className="grid grid-cols-4 gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedSize("all")}
+                className={`py-1.5 text-xs font-mono uppercase border transition-all ${selectedSize === "all"
+                  ? "border-black bg-black text-white font-bold"
+                  : "border-neutral-200 hover:border-black text-neutral-800"
+                  }`}
+              >
+                All
+              </button>
+              {availableSizesList.map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => setSelectedSize(sz)}
+                  className={`py-1.5 text-xs font-mono uppercase border transition-all ${selectedSize.toUpperCase() === sz.toUpperCase()
+                    ? "border-black bg-black text-white font-bold"
+                    : "border-neutral-200 hover:border-black text-neutral-800"
+                    }`}
+                >
+                  {sz}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color Palette Filter */}
+          {colors.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-neutral-100">
+              <label className="text-[11px] font-mono uppercase text-neutral-500 block">Colorway</label>
+              <div className="space-y-1 max-h-48 overflow-y-auto no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setSelectedColor("all")}
+                  className={`w-full text-left px-2.5 py-1.5 text-xs font-mono uppercase rounded flex items-center gap-2 transition-colors ${selectedColor === "all" ? "bg-black text-white font-bold" : "text-neutral-700 hover:bg-neutral-100"
+                    }`}
+                >
+                  <span className="w-3.5 h-3.5 rounded-full border border-neutral-300 bg-linear-to-r from-red-500 via-green-500 to-blue-500" />
+                  <span>All Colorways</span>
+                </button>
+                {colors.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedColor(c.name)}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs font-mono uppercase rounded flex items-center gap-2 transition-colors ${selectedColor.toLowerCase() === c.name.toLowerCase()
+                      ? "bg-black text-white font-bold"
+                      : "text-neutral-700 hover:bg-neutral-100"
+                      }`}
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-neutral-300 shrink-0"
+                      style={{ backgroundColor: c.hexCode }}
+                    />
+                    <span className="truncate">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Stock Toggle */}
+          <div className="pt-2 border-t border-neutral-100">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-mono text-neutral-800">
+              <input
+                type="checkbox"
+                checked={inStockOnly}
+                onChange={(e) => setInStockOnly(e.target.checked)}
+                className="accent-black w-4 h-4 rounded-none"
+              />
+              <span>In-Stock Items Only</span>
+            </label>
+          </div>
+        </aside>
+
+        {/* Catalog Main Feed (9 Cols) */}
+        <div className="lg:col-span-9 space-y-6">
+          {/* Top Filter Bar & Sorting Deck */}
+          <div className="bg-white border border-neutral-200 p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            {/* Left: Results Count & Active Chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Mobile Filter Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(true)}
+                className="lg:hidden inline-flex items-center gap-2 px-3 py-2 bg-neutral-900 text-white text-xs font-mono uppercase"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ""}</span>
+              </button>
+
+              <span className="text-xs font-mono text-neutral-500 uppercase">
+                Showing <strong className="text-black font-bold">{filteredProducts.length}</strong> of{" "}
+                {products.length} Archival Drops
+              </span>
+
+              {/* Active Filter Chips */}
+              {selectedCategory !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 text-black text-[11px] font-mono uppercase">
+                  <span>Cat: {selectedCategory}</span>
+                  <button onClick={() => setSelectedCategory("all")}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {selectedSize !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 text-black text-[11px] font-mono uppercase">
+                  <span>Size: {selectedSize}</span>
+                  <button onClick={() => setSelectedSize("all")}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {selectedColor !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 text-black text-[11px] font-mono uppercase">
+                  <span>Color: {selectedColor}</span>
+                  <button onClick={() => setSelectedColor("all")}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {searchQuery.trim() && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 text-black text-[11px] font-mono uppercase">
+                  <span>Query: &quot;{searchQuery}&quot;</span>
+                  <button onClick={() => setSearchQuery("")}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+            </div>
+
+            {/* Right: Sorting Select & View Switcher */}
+            <div className="flex items-center gap-3 self-end sm:self-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono uppercase text-neutral-400 hidden sm:inline">Sort By:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 text-xs font-mono uppercase text-neutral-900 focus:outline-none focus:border-black"
+                >
+                  <option value="featured">Featured / Curated</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="gsm-high">Heaviest Weave First</option>
+                  <option value="newest">Newest Drops First</option>
+                </select>
+              </div>
+
+              <div className="hidden sm:flex items-center border border-neutral-200">
+                <button
+                  type="button"
+                  aria-label="3 Column View"
+                  onClick={() => setViewCols(3)}
+                  className={`p-1.5 transition-colors ${viewCols === 3 ? "bg-black text-white" : "text-neutral-500 hover:text-black"}`}
+                >
+                  <Grid2X2 className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="4 Column View"
+                  onClick={() => setViewCols(4)}
+                  className={`p-1.5 transition-colors ${viewCols === 4 ? "bg-black text-white" : "text-neutral-500 hover:text-black"}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {loading ? (
+            <div className="py-24 text-center bg-white border border-neutral-200 shadow-xs">
+              <div className="w-10 h-10 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+                Loading Calviz Apparel Catalog...
+              </p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            /* Empty State */
+            <div className="bg-white border border-neutral-200 p-12 text-center shadow-xs space-y-4">
+              <ShoppingBag className="w-12 h-12 text-neutral-300 mx-auto stroke-[1.5]" />
+              <h3 className="text-base font-bold uppercase tracking-wider text-black">
+                No Matching Apparel Drops
+              </h3>
+              <p className="text-xs text-neutral-500 max-w-md mx-auto">
+                No products match your active combination of filters. Try clearing your filters or search for another heavyweight essential.
+              </p>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="px-6 py-2.5 bg-black text-white text-xs font-mono uppercase tracking-wider font-bold hover:bg-neutral-800 transition-colors"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            /* Product Grid */
+            <div
+              className={`grid gap-6 ${viewCols === 3
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+                }`}
+            >
+              {filteredProducts.map((product) => {
+                const metrics = getProductMetrics(product);
+                const isWishlisted = !!wishlist[product.id];
+                const activeSize =
+                  selectedSizes[product.id] || product.availableSizes?.[0] || "M";
+                const primaryImage =
+                  product.primaryImageUrl ||
+                  product.images?.find((img) => img.isPrimary)?.imageUrl ||
+                  product.images?.[0]?.imageUrl;
+                const secondaryImage =
+                  product.images?.find(
+                    (img) => img.imageUrl && img.imageUrl !== primaryImage
+                  )?.imageUrl ||
+                  product.images?.[1]?.imageUrl ||
+                  primaryImage;
+
+                return (
+                  <div
+                    key={product.id}
+                    className="group flex flex-col justify-between bg-white border border-neutral-200 hover:border-black transition-all duration-300 shadow-xs hover:shadow-md relative overflow-hidden"
+                  >
+                    {/* Top Media Container */}
+                    <div>
+                      <div className="relative aspect-4/5 bg-neutral-100 overflow-hidden">
+                        <Link href={`/products/${product.slug}`} className="block w-full h-full relative overflow-hidden">
+                          <img
+                            src={primaryImage}
+                            alt={product.name}
+                            className="w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105"
+                          />
+                          {secondaryImage && secondaryImage !== primaryImage && (
+                            <img
+                              src={secondaryImage}
+                              alt={`${product.name} alternate`}
+                              className="w-full h-full object-cover object-top absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out group-hover:scale-105"
+                            />
+                          )}
+                        </Link>
+
+                        {/* Top Badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-1 pointer-events-none">
+                          <span
+                            className={`px-2 py-0.5 text-[9px] font-mono uppercase font-bold tracking-wider ${metrics.isOutOfStock
+                              ? "bg-red-600 text-white"
+                              : metrics.isUrgent
+                                ? "bg-amber-500 text-black"
+                                : "bg-black text-white"
+                              }`}
+                          >
+                            {metrics.badge}
+                          </span>
+                        </div>
+
+                        {/* Wishlist Button */}
+                        <button
+                          type="button"
+                          aria-label="Toggle Wishlist"
+                          onClick={() => toggleWishlist(product.id)}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md border border-neutral-200 flex items-center justify-center text-neutral-700 hover:text-black hover:scale-110 transition-all shadow-xs"
+                        >
+                          <Heart
+                            className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""
+                              }`}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Product Content Details */}
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">
+                              {product.categoryName || "HEAVYWEIGHT STREETWEAR"}
+                            </span>
+                            <Link href={`/products/${product.slug}`}>
+                              <h3 className="text-sm font-bold text-neutral-950 uppercase tracking-tight hover:underline line-clamp-1 mt-0.5">
+                                {product.name}
+                              </h3>
+                            </Link>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-mono font-bold text-black block">
+                              LKR {product.basePrice.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Size Selection Pill Matrix */}
+                        {product.availableSizes && product.availableSizes.length > 0 && (
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-mono uppercase text-neutral-400 block">
+                              SELECT SIZE: {activeSize}
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {product.availableSizes.map((sz) => (
+                                <button
+                                  key={sz}
+                                  type="button"
+                                  onClick={() => handleSelectSize(product.id, sz)}
+                                  className={`px-2 py-1 text-[10px] font-mono uppercase border transition-all ${activeSize === sz
+                                    ? "border-black bg-black text-white font-bold"
+                                    : "border-neutral-200 bg-neutral-50 hover:border-neutral-400 text-neutral-800"
+                                    }`}
+                                >
+                                  {sz}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bottom Action Deck */}
+                    <div className="p-4 pt-0">
+                      <button
+                        type="button"
+                        disabled={metrics.isOutOfStock}
+                        onClick={() => handleAddToBag(product)}
+                        className={`w-full py-2.5 text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 ${metrics.isOutOfStock
+                          ? "bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200"
+                          : "bg-neutral-900 hover:bg-black text-white active:scale-98 shadow-xs"
+                          }`}
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>{metrics.isOutOfStock ? "SOLD OUT" : "ADD TO BAG"}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Slide-Over Filter Drawer */}
+      {isMobileFilterOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMobileFilterOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative ml-auto w-full max-w-xs bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto z-10">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-black" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-black">Filter Catalog</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="p-1 hover:bg-neutral-100 rounded text-neutral-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Categories */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-mono uppercase text-neutral-500 block">Category</span>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory("all")}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded ${selectedCategory === "all" ? "bg-black text-white font-bold" : "text-neutral-700 bg-neutral-50"
+                      }`}
+                  >
+                    All Categories
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.slug || cat.id)}
+                      className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded ${selectedCategory === cat.slug || selectedCategory === cat.id
+                        ? "bg-black text-white font-bold"
+                        : "text-neutral-700 bg-neutral-50"
+                        }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sizes */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-mono uppercase text-neutral-500 block">Size</span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSize("all")}
+                    className={`py-1.5 text-xs font-mono uppercase border ${selectedSize === "all" ? "border-black bg-black text-white font-bold" : "border-neutral-200"
+                      }`}
+                  >
+                    All
+                  </button>
+                  {availableSizesList.map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setSelectedSize(sz)}
+                      className={`py-1.5 text-xs font-mono uppercase border ${selectedSize.toUpperCase() === sz.toUpperCase()
+                        ? "border-black bg-black text-white font-bold"
+                        : "border-neutral-200"
+                        }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* In-Stock */}
+              <div>
+                <label className="flex items-center gap-2 text-xs font-mono text-neutral-800">
+                  <input
+                    type="checkbox"
+                    checked={inStockOnly}
+                    onChange={(e) => setInStockOnly(e.target.checked)}
+                    className="accent-black w-4 h-4"
+                  />
+                  <span>In-Stock Only</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-neutral-100 flex gap-2">
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="flex-1 py-2.5 border border-neutral-300 text-xs font-mono uppercase font-bold"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="flex-1 py-2.5 bg-black text-white text-xs font-mono uppercase font-bold"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function ShopProductsPage() {
+  return (
+    <div className="min-h-screen bg-[#fafafa] text-[#09090b] flex flex-col font-sans">
+      <Header />
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-36 md:pt-44 pb-20">
+        <Suspense fallback={<div className="py-24 text-center"><div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" /></div>}>
+          <ShopProductsContent />
+        </Suspense>
+      </main>
+      <Footer />
+    </div>
+  );
+}
