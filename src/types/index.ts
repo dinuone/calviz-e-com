@@ -25,9 +25,11 @@ export interface ProductImage {
 
 export interface ProductSummary {
   id: string;
-  categoryId: string;
-  categoryName: string;
+  categoryId?: string;
+  categoryIds?: string[];
+  categoryName?: string;
   categorySlug?: string;
+  categories?: { id: string; name: string; slug: string }[];
   name: string;
   slug: string;
   basePrice: number;
@@ -85,9 +87,11 @@ export interface ProductDetail {
   sizeChartImageUrl?: string | null;
   sizeMeasurementsJson?: string | null;
   sizeGuideNotes?: string | null;
-  categoryId: string;
-  categoryName: string;
-  categorySlug: string;
+  categoryId?: string;
+  categoryIds?: string[];
+  categoryName?: string;
+  categorySlug?: string;
+  categories?: { id: string; name: string; slug: string }[];
   variants: ProductVariantDetail[];
   images: ProductImage[];
 }
@@ -245,6 +249,8 @@ export interface CheckoutConfig {
   standardDeliveryFee: number;
   freeDeliveryThreshold?: number | null;
   estimatedDeliveryDays: string;
+  colomboEstimatedDeliveryDays?: string;
+  outstationEstimatedDeliveryDays?: string;
   currency: string;
   cities: City[];
 }

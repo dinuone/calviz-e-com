@@ -24,9 +24,10 @@ export function getMediaUrl(url?: string | null): string {
   return `${origin}${cleanPath}`;
 }
 
-export async function fetchProducts(categoryId?: string): Promise<ProductSummary[]> {
+export async function fetchProducts(categoryId?: string, pageSize: number = 50): Promise<ProductSummary[]> {
   try {
     const url = new URL(`${API_BASE}/products`);
+    url.searchParams.append("pageSize", pageSize.toString());
     if (categoryId && categoryId !== "all" && categoryId !== "featured") {
       url.searchParams.append("category", categoryId);
     }
@@ -124,8 +125,9 @@ export async function fetchCheckoutConfig(): Promise<CheckoutConfig> {
       },
       standardDeliveryFee: 330.00,
       freeDeliveryThreshold: 15000.00,
-      estimatedDeliveryDays: "2-4 Business Days",
-
+      estimatedDeliveryDays: "Within 24 Hours (Colombo) / 2-3 Working Days (Island-Wide)",
+      colomboEstimatedDeliveryDays: "Within 24 Hours",
+      outstationEstimatedDeliveryDays: "2-3 Working Days",
       currency: "LKR",
       cities: [
         { name: "Colombo 01 (Fort)", district: "Colombo", postalCode: "00100", province: "Western" },

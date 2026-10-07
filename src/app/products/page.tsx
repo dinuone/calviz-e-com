@@ -6,6 +6,9 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
+import { useAuthModalStore } from "@/lib/store/useAuthModalStore";
 import { fetchProducts, fetchCategories, fetchColors } from "@/lib/api";
 import { ProductSummary, Category, ColorAttribute } from "@/types";
 import {
@@ -62,11 +65,11 @@ function ShopProductsContent() {
   // Selected Sizes State (map of productId -> size)
   const [selectedSizes, setSelectedSizes] = useState<{ [key: string]: string }>({});
 
-  // Wishlist state (map of productId -> boolean)
-  const [wishlist, setWishlist] = useState<{ [key: string]: boolean }>({});
-
-  // Cart store
+  // Cart & Auth & Wishlist Stores
   const { addItem, openCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+  const { items: wishlistItems, toggleItem, setPendingProduct } = useWishlistStore();
+  const { openModal } = useAuthModalStore();
 
   // Load initial data
   useEffect(() => {
@@ -137,10 +140,15 @@ function ShopProductsContent() {
       .filter((p) => {
         // Category Filter
         if (selectedCategory !== "all") {
-          const matchSlug = p.categorySlug === selectedCategory;
-          const matchId = p.categoryId === selectedCategory;
-          const matchName = p.categoryName?.toLowerCase() === selectedCategory.toLowerCase();
-          if (!matchSlug && !matchId && !matchName) return false;
+          const sel = selectedCategory.toLowerCase();
+          const matchSlug = p.categorySlug?.toLowerCase() === sel;
+          const matchId = p.categoryId?.toLowerCase() === sel;
+          const matchName = p.categoryName?.toLowerCase() === sel;
+          const matchMulti = p.categories?.some(
+            (c) => c.slug?.toLowerCase() === sel || c.id?.toLowerCase() === sel || c.name?.toLowerCase() === sel
+          );
+          const matchMultiId = p.categoryIds?.some((id) => id?.toLowerCase() === sel);
+          if (!matchSlug && !matchId && !matchName && !matchMulti && !matchMultiId) return false;
         }
 
         // Search Query Filter
@@ -216,7 +224,16 @@ function ShopProductsContent() {
   };
 
   const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => ({ ...prev, [productId]: !prev[productId] }));
+    if (!isAuthenticated) {
+      setPendingProduct(productId);
+      openModal({
+        tab: "login",
+        title: "SIGN IN FOR WISHLIST",
+        description: "Sign in to save this capsule piece to your private client wishlist.",
+      });
+      return;
+    }
+    toggleItem(productId);
   };
 
   const handleAddToBag = (product: ProductSummary) => {
@@ -585,7 +602,7 @@ function ShopProductsContent() {
             >
               {filteredProducts.map((product) => {
                 const metrics = getProductMetrics(product);
-                const isWishlisted = !!wishlist[product.id];
+                const isWishlisted = wishlistItems.includes(product.id);
                 const activeSize =
                   selectedSizes[product.id] || product.availableSizes?.[0] || "M";
                 const primaryImage =
@@ -697,6 +714,23 @@ function ShopProductsContent() {
                             </div>
                           </div>
                         )}
+
+                        {/* Estimated Delivery Time SLA Badge */}
+                        <div className="flex items-center justify-between px-2.5 py-1.5 bg-neutral-900 text-white rounded font-mono text-[10px] tracking-tight shadow-xs border border-neutral-800">
+                          <div className="flex items-center gap-1.5">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span className="font-medium text-neutral-200">
+                              Colombo: <strong className="text-emerald-400 font-bold">24H</strong>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-neutral-400 border-l border-neutral-700/80 pl-2">
+                            <Truck className="w-3 h-3 text-neutral-300" />
+                            <span>Island: <strong className="text-white">2–3 Days</strong></span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -706,12 +740,12 @@ function ShopProductsContent() {
                         type="button"
                         disabled={metrics.isOutOfStock}
                         onClick={() => handleAddToBag(product)}
-                        className={`w-full py-2.5 text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 ${metrics.isOutOfStock
+                        className={`w-full py-2.5 text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 rounded-sm ${metrics.isOutOfStock
                           ? "bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200"
-                          : "bg-neutral-900 hover:bg-black text-white active:scale-98 shadow-xs"
+                          : "btn-add-to-bag cursor-pointer active:scale-98"
                           }`}
                       >
-                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <ShoppingBag className="w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110" />
                         <span>{metrics.isOutOfStock ? "SOLD OUT" : "ADD TO BAG"}</span>
                       </button>
                     </div>

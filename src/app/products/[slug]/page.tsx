@@ -193,6 +193,25 @@ export default function ProductDetailPage() {
     }, 800);
   };
 
+  const handleBuyNow = () => {
+    if (!product || isOutOfStock) return;
+
+    addItem({
+      variantId: activeVariant?.id ? String(activeVariant.id) : `${product.id}-${selectedSize}`,
+      productId: String(product.id),
+      productName: product.name,
+      slug: product.slug,
+      size: selectedSize,
+      color: selectedColor || "Standard",
+      unitPrice: Number(product.basePrice) + (activeVariant?.priceAdjustment || 0),
+      quantity: 1,
+      imageUrl: activeMainImage,
+      maxStock: currentStock,
+    });
+
+    router.push("/checkout");
+  };
+
   const handleDirectWhatsApp = () => {
     if (!product) return;
     const msg = encodeURIComponent(
@@ -511,15 +530,31 @@ export default function ProductDetailPage() {
 
               {/* Action Buttons */}
               <div className="space-y-2.5 pt-2">
+                {/* 1. Highlighted BUY NOW Button */}
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={isOutOfStock}
+                  className={`w-full py-3.5 px-6 rounded-lg flex items-center justify-center gap-2.5 transition-all font-mono text-xs uppercase tracking-widest font-bold cursor-pointer shadow-md ${isOutOfStock
+                    ? "bg-neutral-200 text-neutral-400 cursor-not-allowed"
+                    : "bg-black text-white hover:bg-neutral-800 active:scale-[0.99] btn-black-animated"
+                    }`}
+                >
+                  <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <span>BUY NOW • INSTANT CHECKOUT</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                {/* 2. Bordered ADD TO BAG Button */}
                 <button
                   type="button"
                   disabled={isOutOfStock}
                   onClick={handleAddToCart}
-                  className={`w-full py-3.5 px-6 rounded flex items-center justify-between group transition-all cursor-pointer font-bold shadow-sm ${isOutOfStock
-                    ? "bg-neutral-200 text-neutral-500 cursor-not-allowed"
+                  className={`w-full py-3 px-6 rounded-lg flex items-center justify-between group transition-all font-bold ${isOutOfStock
+                    ? "bg-neutral-100 text-neutral-400 border border-neutral-300 cursor-not-allowed"
                     : addedAnimation
-                      ? "bg-emerald-600 text-white"
-                      : "bg-black text-white hover:bg-neutral-800"
+                      ? "bg-emerald-600 text-white border-2 border-emerald-600 shadow-sm"
+                      : "bg-white text-neutral-900 border-2 border-neutral-900 hover:bg-neutral-900 hover:text-white cursor-pointer active:scale-[0.99] shadow-xs"
                     }`}
                 >
                   <span className="font-mono text-xs uppercase tracking-widest">
@@ -530,27 +565,18 @@ export default function ProductDetailPage() {
                         : `ADD TO BAG // LKR ${Number(product.basePrice).toLocaleString()}`}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs uppercase text-neutral-300 group-hover:text-white transition-colors">
+                    <span className="font-mono text-[11px] uppercase text-neutral-500 group-hover:text-neutral-300 transition-colors">
                       {addedAnimation ? "OPENING BAG..." : "ALLOCATE"}
                     </span>
                     <ShoppingBag className="w-4 h-4" />
                   </div>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={isOutOfStock}
-                  className="w-full bg-neutral-100 hover:bg-neutral-200 text-black py-3 px-6 rounded flex items-center justify-center gap-2 transition-colors font-mono text-xs uppercase tracking-wider font-bold border border-neutral-200 cursor-pointer"
-                >
-                  <Truck className="w-4 h-4" />
-                  <span>BUY NOW </span>
-                </button>
-
+                {/* 3. Direct WhatsApp Concierge Button */}
                 <button
                   type="button"
                   onClick={handleDirectWhatsApp}
-                  className="w-full py-2.5 px-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/40 text-[#075E54] hover:text-black rounded flex items-center justify-center gap-2 transition-all font-mono text-xs uppercase tracking-wider font-bold cursor-pointer shadow-xs group"
+                  className="w-full py-2.5 px-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/40 text-[#075E54] hover:text-black rounded-lg flex items-center justify-center gap-2 transition-all font-mono text-xs uppercase tracking-wider font-bold cursor-pointer shadow-xs group"
                 >
                   <WhatsAppIcon className="w-4 h-4 text-[#25D366] group-hover:scale-110 transition-transform" />
                   <span>ORDER VIA WHATSAPP</span>
@@ -559,7 +585,24 @@ export default function ProductDetailPage() {
 
               {/* Delivery & Dispatch Pillars */}
               <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3.5">
-                <div className="flex items-start gap-3">
+                {/* Highlighted Delivery SLA Header */}
+                <div className="flex items-center justify-between p-2.5 bg-neutral-900 text-white rounded-md font-mono text-xs shadow-xs border border-neutral-800">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="font-semibold text-neutral-200">
+                      Colombo: <strong className="text-emerald-400 font-bold">Within 24 Hours</strong>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-neutral-300 border-l border-neutral-700 pl-3">
+                    <Truck className="w-3.5 h-3.5 text-neutral-400" />
+                    <span>Island: <strong className="text-white">2–3 Days</strong></span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 pt-1">
                   <ShieldCheck className="w-5 h-5 text-black shrink-0 mt-0.5" />
                   <div>
                     <p className="font-mono text-xs text-black uppercase font-bold">

@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Search, ShoppingBag, User, X, Trash2, ArrowRight } from "lucide-react";
+import { Search, ShoppingBag, User, X, Trash2, ArrowRight, Menu } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
+import { useAuthModalStore } from "@/lib/store/useAuthModalStore";
 
 export default function Header() {
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currency, setCurrency] = useState<"LKR" | "USD">("LKR");
   const { items, isOpen, openCart, closeCart, removeItem, updateQuantity, subtotal, totalCount } = useCartStore();
   const { customer, isAuthenticated } = useAuthStore();
@@ -21,10 +25,10 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-neutral-200">
+      <header className="fixed top-0 left-0 w-full z-50 bg-[#f4f5f7]/95 backdrop-blur-xl border-b border-[#e2e4e8] shadow-[0_4px_20px_-6px_rgba(0,0,0,0.07)] transition-colors duration-300">
         {/* Top Announcement Bar - Animated Infinite Marquee Ticker */}
         <div className="w-full bg-black text-white py-1.5 overflow-hidden border-b border-neutral-800 flex items-center select-none">
-          <div className="animate-marquee whitespace-nowrap flex items-center gap-8 text-[11px] font-mono tracking-widest uppercase font-medium text-neutral-200">
+          <div className="animate-marquee whitespace-nowrap flex items-center gap-8 text-xs font-mono tracking-widest uppercase font-medium text-neutral-200">
             <span>COLOMBO FLAGSHIP & ISLAND-WIDE DISPATCH</span>
             <span className="text-neutral-500">//</span>
             <span>DOORSTEP DELIVERY WITHIN 24 HOURS</span>
@@ -50,33 +54,54 @@ export default function Header() {
         </div>
 
         <div className="h-20 max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-6">
+          {/* Left: Mobile Menu Button & Brand Logo */}
+          <div className="flex items-center gap-3 md:gap-6">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open Navigation Menu"
+              className="lg:hidden p-2 text-neutral-800 hover:text-black hover:bg-neutral-200/60 rounded-lg transition-colors cursor-pointer"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
             <Link href="/" className="flex items-center group py-1">
               <img
                 src="/logo.png"
                 alt="CALVIZ"
-                className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                className="h-9 md:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
 
-            {/* Nav Links */}
-            <nav className="hidden xl:flex items-center gap-6 ml-6">
+            {/* Desktop Nav Links */}
+            <nav className="hidden lg:flex items-center gap-5 xl:gap-8 ml-4">
               <Link
                 href="/"
-                className="text-[11px] font-mono uppercase tracking-widest text-neutral-600 hover:text-black transition-colors"
+                className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors"
               >
                 NEW DROPS
               </Link>
               <Link
                 href="/products"
-                className="text-[11px] font-mono uppercase tracking-widest text-neutral-600 hover:text-black transition-colors"
+                className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors"
               >
-                ALL PRODUCTS
+                SHOP ALL
+              </Link>
+              <Link
+                href="/about"
+                className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors"
+              >
+                ABOUT US
+              </Link>
+              <Link
+                href="/contact"
+                className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors"
+              >
+                CONTACT
               </Link>
               <Link
                 href="/track"
-                className="text-[11px] font-mono uppercase tracking-widest text-neutral-600 hover:text-black transition-colors flex items-center gap-1"
+                className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors flex items-center gap-1.5"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
                 <span>TRACK ORDER</span>
@@ -85,16 +110,15 @@ export default function Header() {
           </div>
 
           {/* Header Controls */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
             {/* Currency selector */}
-            <div className="hidden md:flex items-center gap-1 text-[11px] font-mono text-neutral-700 px-2.5 py-1 bg-neutral-100 rounded border border-neutral-200">
+            <div className="hidden md:flex items-center gap-1 text-xs font-mono font-bold text-neutral-800 px-2.5 py-1 bg-white rounded border border-neutral-300 shadow-xs">
               <span
                 onClick={() => setCurrency("LKR")}
                 className={`cursor-pointer transition-colors ${currency === "LKR" ? "text-black font-bold" : "hover:text-black"}`}
               >
                 LKR
               </span>
-
             </div>
 
             {/* Search */}
@@ -128,17 +152,27 @@ export default function Header() {
               type="button"
               aria-label="Wishlist"
               onClick={() => {
-                const el = document.getElementById("catalog");
-                el?.scrollIntoView({ behavior: "smooth" });
+                if (!isAuthenticated) {
+                  useAuthModalStore.getState().openModal({
+                    tab: "login",
+                    title: "SIGN IN FOR WISHLIST",
+                    description: "Sign in to access your private saved wishlist and capsule items.",
+                  });
+                } else {
+                  const el = document.getElementById("catalog");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }
               }}
               className="relative p-1.5 text-neutral-700 hover:text-black transition-colors flex items-center justify-center cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white font-mono text-[9px] flex items-center justify-center rounded-full">
-                2
-              </span>
+              {mounted && useWishlistStore.getState().items.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white font-mono text-[9px] flex items-center justify-center rounded-full">
+                  {useWishlistStore.getState().items.length}
+                </span>
+              )}
             </button>
 
             {/* Cart Button */}
@@ -182,6 +216,84 @@ export default function Header() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Slide-Over Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex justify-start bg-black/50 backdrop-blur-xs transition-opacity animate-fade-in lg:hidden">
+          <div className="w-full max-w-xs bg-white h-full flex flex-col shadow-2xl border-r border-neutral-200 animate-slide-right">
+            {/* Drawer Header */}
+            <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
+                <img src="/logo.png" alt="CALVIZ" className="h-8 w-auto object-contain" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 text-neutral-500 hover:text-black rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="flex-1 p-5 space-y-1 font-mono text-sm uppercase tracking-wider overflow-y-auto">
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
+              >
+                NEW DROPS
+              </Link>
+              <Link
+                href="/products"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
+              >
+                ALL PRODUCTS
+              </Link>
+              <Link
+                href="/about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
+              >
+                ABOUT ATELIER
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
+              >
+                CONTACT CLIENT DESK
+              </Link>
+              <Link
+                href="/track"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>TRACK CONSIGNMENT</span>
+              </Link>
+
+              <div className="pt-4 mt-4 border-t border-neutral-200">
+                <a
+                  href="https://wa.me/94704901027"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-3 rounded-xl bg-[#25D366]/10 text-[#075E54] border border-[#25D366]/30 font-bold transition-colors"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+                  <span>VIP WhatsApp (+94 70 490 1027)</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-4 border-t border-neutral-200 bg-neutral-50 text-[10px] font-mono text-neutral-500 text-center">
+              COLOMBO FLAGSHIP ATELIER // 24H DELIVERY
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Slide-over Cart Drawer */}

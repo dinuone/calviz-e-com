@@ -201,7 +201,7 @@ export default function OrderSuccessCelebration({
                   3
                 </div>
                 <span className="text-neutral-400">Dispatch</span>
-                <span className="text-[9px] text-neutral-600">24-48h Delivery</span>
+                <span className="text-[9px] text-emerald-400">Colombo: 24h · Island: 2-3d</span>
               </div>
             </div>
           </div>
@@ -217,9 +217,9 @@ export default function OrderSuccessCelebration({
                 LKR {totalAmount.toLocaleString()}
               </div>
             ) : null}
-            <div className="flex items-center gap-1.5 text-neutral-300">
-              <Truck className="w-4 h-4 text-neutral-400" />
-              <span>Island-wide Courier</span>
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <Truck className="w-4 h-4 text-emerald-400" />
+              <span>Doorstep Delivery SLA</span>
             </div>
           </div>
 

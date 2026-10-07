@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import PageLoader from "@/components/PageLoader";
+import AuthModal from "@/components/AuthModal";
+import SiteModeGatekeeper from "@/components/SiteModeGatekeeper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,7 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col">
         <PageLoader />
-        {children}
+        <SiteModeGatekeeper>
+          {children}
+        </SiteModeGatekeeper>
+        <AuthModal />
       </body>
     </html>
   );

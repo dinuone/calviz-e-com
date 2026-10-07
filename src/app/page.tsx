@@ -28,8 +28,12 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
+import { useAuthModalStore } from "@/lib/store/useAuthModalStore";
 import { fetchProducts, fetchCategories, fetchLookbookBanners, fetchHeroSection, fetchOffersSection } from "@/lib/api";
 import { ProductSummary, Category, LookbookBanner, HeroSectionConfig, HeroSlide, OfferCard, OffersSectionConfig } from "@/types";
+import { validateSriLankanMobile, sanitizeInput } from "@/lib/sanitizer";
 
 const DEFAULT_OFFER_CARDS: OfferCard[] = [
   {
@@ -119,20 +123,19 @@ export default function HomePage() {
   // Selected Sizes State (map of productId -> size)
   const [selectedSizes, setSelectedSizes] = useState<{ [key: string]: string }>({});
 
-  // Wishlist state (map of productId -> boolean)
-  const [wishlist, setWishlist] = useState<{ [key: string]: boolean }>({
-    "spec-010": true,
-    "spec-013": true,
-  });
-
   // VIP Drop Form State
   const [phoneInput, setPhoneInput] = useState("");
   const [vipSuccess, setVipSuccess] = useState(false);
+  const [vipError, setVipError] = useState<string | null>(null);
+  const [vipLoading, setVipLoading] = useState(false);
   const [lookbooks, setLookbooks] = useState<LookbookBanner[]>([]);
   const [lookbooksLoaded, setLookbooksLoaded] = useState(false);
 
-  // Cart store
+  // Cart & Auth & Wishlist Stores
   const { addItem, openCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
+  const { items: wishlistItems, toggleItem, setPendingProduct } = useWishlistStore();
+  const { openModal } = useAuthModalStore();
   const catalogTrackRef = useRef<HTMLDivElement>(null);
 
   // 0. Fetch Hero Section Configuration on Mount
@@ -268,21 +271,41 @@ export default function HomePage() {
     loadProducts(selectedCategory);
   }, [selectedCategory, loadProducts]);
 
-  // Filter products: Show Featured Products by default when "featured" is active
+  // Filter products: Show Featured/Selected Category Products and randomly pick 4 items each time
   const displayedProducts = useMemo(() => {
+    let candidateList: ProductSummary[] = [];
+
     if (selectedCategory === "featured") {
       const featured = products.filter((p) => p.isFeatured);
-      // If admin marked some products as featured, only show them by default
-      return featured.length > 0 ? featured : products;
+      candidateList = featured.length > 0 ? featured : products;
+    } else if (selectedCategory === "all") {
+      candidateList = products;
+    } else {
+      candidateList = products.filter(
+        (p) =>
+          p.categorySlug?.toLowerCase() === selectedCategory.toLowerCase() ||
+          p.categoryId?.toLowerCase() === selectedCategory.toLowerCase() ||
+          p.categories?.some(
+            (c) =>
+              c.slug?.toLowerCase() === selectedCategory.toLowerCase() ||
+              c.id?.toLowerCase() === selectedCategory.toLowerCase() ||
+              c.name?.toLowerCase() === selectedCategory.toLowerCase()
+          ) ||
+          p.categoryIds?.includes(selectedCategory)
+      );
     }
-    if (selectedCategory === "all") {
-      return products;
+
+    if (candidateList.length <= 4) {
+      return candidateList;
     }
-    return products.filter(
-      (p) =>
-        p.categorySlug?.toLowerCase() === selectedCategory.toLowerCase() ||
-        p.categoryId?.toLowerCase() === selectedCategory.toLowerCase()
-    );
+
+    // Randomize order on each render/selection and select only 4 products
+    const shuffled = [...candidateList];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, 4);
   }, [products, selectedCategory]);
 
   // 3. Auto-play Carousel
@@ -309,7 +332,16 @@ export default function HomePage() {
   };
 
   const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => ({ ...prev, [productId]: !prev[productId] }));
+    if (!isAuthenticated) {
+      setPendingProduct(productId);
+      openModal({
+        tab: "login",
+        title: "SIGN IN FOR WISHLIST",
+        description: "Sign in to save this capsule piece to your private client wishlist.",
+      });
+      return;
+    }
+    toggleItem(productId);
   };
 
   const handleAddToBag = (product: ProductSummary) => {
@@ -359,10 +391,43 @@ export default function HomePage() {
     }
   };
 
-  const handleVipSubmit = (e: React.FormEvent) => {
+  const handleVipSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneInput.trim().length >= 7) {
+    setVipError(null);
+
+    const validation = validateSriLankanMobile(phoneInput);
+    if (!validation.isValid) {
+      setVipError(validation.error || "Please enter a valid 9-digit mobile number starting with 7.");
+      return;
+    }
+
+    try {
+      setVipLoading(true);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5070/api";
+      const res = await fetch(`${apiUrl}/inquiries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "VIP Early Allocation Member",
+          phone: validation.formatted,
+          inquiryType: "VIP Early Allocation / Drop 02",
+          message: `Customer registered for early access priority drop 02 reservation (${validation.formatted}).`,
+          submitElapsedSeconds: 3.5,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Failed to register mobile. Please try again.");
+      }
+
       setVipSuccess(true);
+      setVipError(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Registration error. Please check your number.";
+      setVipError(msg);
+    } finally {
+      setVipLoading(false);
     }
   };
 
@@ -451,18 +516,14 @@ export default function HomePage() {
                   <div className="space-y-3 sm:space-y-4">
                     <h1 className="text-3xl sm:text-5xl lg:text-[62px] font-black uppercase tracking-tight text-neutral-950 leading-[1.02] sm:leading-[0.96]">
                       <span className="block tracking-tight text-neutral-950">
-                        {heroConfig?.titleLine1 || "ARCHITECTURAL"}
-                      </span>
-                      <span className="block tracking-tight text-neutral-800">
-                        {heroConfig?.titleLine2 || "SILHOUETTE"}
+                        BOLD FIT.
                       </span>
                       <span className="block tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-500 bg-clip-text text-transparent">
-                        {heroConfig?.titleLine3 || "240 GSM HEAVYWEIGHT."}
+                        EFFORTLESS STYLE.
                       </span>
                     </h1>
                     <p className="text-xs sm:text-sm text-neutral-600 max-w-md leading-relaxed font-normal">
-                      {heroConfig?.description ||
-                        "Structured boxy proportions cut from custom-milled organic combed cotton with tension-locked anti-sag collar ribbing."}
+                      Structured boxy proportions cut from custom-milled organic combed cotton with tension-locked anti-sag collar ribbing.
                     </p>
                   </div>
 
@@ -735,7 +796,7 @@ export default function HomePage() {
                       selectedSizes[product.id] ||
                       product.availableSizes?.[0] ||
                       "M";
-                    const isFavorited = !!wishlist[product.id];
+                    const isFavorited = wishlistItems.includes(product.id);
                     const subtitle = `${product.categoryName || "Premium Edition"} // ${product.availableColors?.[0] || "Standard Dye"
                       }`;
 
@@ -841,6 +902,23 @@ export default function HomePage() {
                               <span>•</span>
                               <span>100% COMBED COTTON</span>
                             </div>
+
+                            {/* Estimated Delivery Time SLA Badge */}
+                            <div className="flex items-center justify-between px-2.5 py-1.5 mt-2.5 bg-neutral-900 text-white rounded font-mono text-[10px] tracking-tight shadow-xs border border-neutral-800">
+                              <div className="flex items-center gap-1.5">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span className="font-medium text-neutral-200">
+                                  Colombo: <strong className="text-emerald-400 font-bold">24H</strong>
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-neutral-400 border-l border-neutral-700/80 pl-2">
+                                <Truck className="w-3 h-3 text-neutral-300" />
+                                <span>Island: <strong className="text-white">2–3 Days</strong></span>
+                              </div>
+                            </div>
                           </div>
 
                           {/* Quick Size Selection & Bag */}
@@ -894,9 +972,9 @@ export default function HomePage() {
                               type="button"
                               disabled={metrics.isOutOfStock}
                               onClick={() => handleAddToBag(product)}
-                              className={`w-full py-2.5 font-mono text-xs uppercase transition-colors rounded flex items-center justify-center gap-2 font-bold ${metrics.isOutOfStock
+                              className={`w-full py-2.5 font-mono text-xs uppercase rounded flex items-center justify-center gap-2 font-bold transition-all ${metrics.isOutOfStock
                                 ? "bg-neutral-200 text-neutral-500 cursor-not-allowed"
-                                : "bg-black text-white hover:bg-neutral-800 cursor-pointer"
+                                : "btn-add-to-bag cursor-pointer active:scale-98"
                                 }`}
                             >
                               <ShoppingBag className="w-3.5 h-3.5" />
@@ -912,6 +990,18 @@ export default function HomePage() {
                     );
                   })}
               </div>
+
+              {!loadingProducts && displayedProducts.length > 0 && products.length > 4 && (
+                <div className="mt-10 flex justify-center">
+                  <Link
+                    href={selectedCategory && selectedCategory !== "all" && selectedCategory !== "featured" ? `/products?category=${selectedCategory}` : "/products"}
+                    className="inline-flex items-center gap-2 px-7 py-3 rounded-none bg-black text-white hover:bg-neutral-800 text-xs font-mono uppercase tracking-widest font-bold transition-all border border-black group"
+                  >
+                    <span>EXPLORE ALL {products.length} PRODUCTS IN CAPSULE</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              )}
 
               {!loadingProducts && products.length === 0 && (
                 <div className="text-center py-12 text-neutral-500 font-mono text-xs">
@@ -1426,27 +1516,42 @@ export default function HomePage() {
                   ) : (
                     <form
                       onSubmit={handleVipSubmit}
-                      className="max-w-lg mx-auto flex flex-col sm:flex-row gap-2 pt-2"
+                      className="max-w-lg mx-auto flex flex-col gap-2 pt-2"
                     >
-                      <div className="flex-1 flex bg-white rounded border border-neutral-300 overflow-hidden">
-                        <span className="inline-flex items-center px-3 bg-neutral-100 text-black font-mono text-xs font-bold border-r border-neutral-200">
-                          +94
-                        </span>
-                        <input
-                          type="tel"
-                          required
-                          value={phoneInput}
-                          onChange={(e) => setPhoneInput(e.target.value)}
-                          placeholder="77 XXX XXXX (MOBILE / WHATSAPP)"
-                          className="w-full bg-transparent px-3 py-2.5 text-[#0a0a0a] font-mono text-xs outline-none"
-                        />
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <div className={`flex-1 flex bg-white rounded border overflow-hidden transition-all ${vipError ? "border-rose-500 ring-1 ring-rose-500" : "border-neutral-300 focus-within:border-black"}`}>
+                          <span className="inline-flex items-center px-3 bg-neutral-100 text-black font-mono text-xs font-bold border-r border-neutral-200">
+                            +94
+                          </span>
+                          <input
+                            type="tel"
+                            required
+                            value={phoneInput}
+                            onChange={(e) => {
+                              // Allow only numbers, spaces, hyphens
+                              const clean = e.target.value.replace(/[^0-9\s\-]/g, "");
+                              setPhoneInput(clean);
+                              if (vipError) setVipError(null);
+                            }}
+                            placeholder="77 XXX XXXX (9-digit mobile)"
+                            maxLength={15}
+                            className="w-full bg-transparent px-3 py-2.5 text-[#0a0a0a] font-mono text-xs outline-none"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={vipLoading}
+                          className="bg-white text-black px-6 py-2.5 font-mono text-xs uppercase hover:bg-neutral-100 transition-colors rounded font-bold cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                        >
+                          {vipLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          {vipLoading ? "VALIDATING..." : "REQUEST ACCESS"}
+                        </button>
                       </div>
-                      <button
-                        type="submit"
-                        className="bg-white text-black px-6 py-2.5 font-mono text-xs uppercase hover:bg-neutral-100 transition-colors rounded font-bold cursor-pointer"
-                      >
-                        REQUEST ACCESS
-                      </button>
+                      {vipError && (
+                        <p className="text-rose-400 font-mono text-[11px] text-left pt-1">
+                          ⚠️ {vipError}
+                        </p>
+                      )}
                     </form>
                   )}
 

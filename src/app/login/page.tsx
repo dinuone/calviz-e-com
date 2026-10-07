@@ -7,7 +7,7 @@ import Script from "next/script";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { customerLogin, customerRegister, customerSocialLogin } from "@/lib/api";
-import { validateSafePlainText } from "@/lib/sanitizer";
+import { validateSafePlainText, validateSriLankanMobile } from "@/lib/sanitizer";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { ShieldCheck, ArrowRight, Lock, Mail, User, Phone, MapPin, Eye, EyeOff } from "lucide-react";
 
@@ -188,8 +188,11 @@ function LoginForm() {
     const emailErr = validateSafePlainText(regEmail, "Email");
     if (emailErr) { setErrorMessage(emailErr); return; }
 
-    const phoneErr = validateSafePlainText(regPhone, "Phone Number");
-    if (phoneErr) { setErrorMessage(phoneErr); return; }
+    const phoneValidation = validateSriLankanMobile(regPhone);
+    if (!phoneValidation.isValid) {
+      setErrorMessage(phoneValidation.error || "Please enter a valid 9-digit mobile number starting with 7.");
+      return;
+    }
 
     if (regAddress) {
       const addrErr = validateSafePlainText(regAddress, "Street Address");
@@ -201,17 +204,27 @@ function LoginForm() {
       if (cityErr) { setErrorMessage(cityErr); return; }
     }
 
+    if (regPostalCode) {
+      const postalErr = validateSafePlainText(regPostalCode, "Postal Code");
+      if (postalErr) { setErrorMessage(postalErr); return; }
+    }
+
+    if (regPassword.length < 8) {
+      setErrorMessage("Password must be at least 8 characters long.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const result = await customerRegister({
-        fullName: regFullName,
-        email: regEmail,
-        phoneNumber: regPhone,
+        fullName: regFullName.trim(),
+        email: regEmail.trim().toLowerCase(),
+        phoneNumber: phoneValidation.normalized,
         password: regPassword,
-        addressLine1: regAddress || undefined,
-        city: regCity || undefined,
-        postalCode: regPostalCode || undefined,
+        addressLine1: regAddress.trim() || undefined,
+        city: regCity.trim() || undefined,
+        postalCode: regPostalCode.trim() || undefined,
       });
 
       setAuth(result.customer, result.token);

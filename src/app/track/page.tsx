@@ -230,13 +230,17 @@ function TrackingContent() {
       })
     : "";
 
+  const isColombo = order?.city?.toLowerCase().includes("colombo");
+  const deliveryDays = isColombo ? 1 : 3;
+  const deliverySlaLabel = isColombo ? "Within 24 Hours (Colombo Express)" : "2–3 Working Days (Island-Wide)";
+
   const estimatedDeliveryDate = order?.createdAt
-    ? new Date(new Date(order.createdAt).getTime() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
+    ? `${new Date(new Date(order.createdAt).getTime() + deliveryDays * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
         weekday: "short",
         month: "short",
         day: "numeric",
-      })
-    : "2-3 Working Days";
+      })} (${deliverySlaLabel})`
+    : deliverySlaLabel;
 
   const whatsappMessage = encodeURIComponent(
     `Hi Calviz Concierge, I am tracking my Order #${order?.orderNumber || searchQuery}. Please provide a live dispatch update.`

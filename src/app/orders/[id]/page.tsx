@@ -612,6 +612,16 @@ export default function OrderDetailsPage() {
                       <Mail className="w-3.5 h-3.5 flex-shrink-0 text-neutral-400" />
                       <span>{order.customerEmail}</span>
                     </p>
+
+                    <div className="pt-2.5 mt-2 border-t border-neutral-100 flex items-center justify-between font-mono text-[11px]">
+                      <span className="text-neutral-500 flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5 text-neutral-800" />
+                        Estimated Delivery:
+                      </span>
+                      <span className="font-bold text-emerald-700">
+                        {order.city.toLowerCase().includes("colombo") ? "Within 24 Hours (Express)" : "2–3 Working Days"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
