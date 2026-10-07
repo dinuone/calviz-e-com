@@ -612,12 +612,16 @@ function ShopProductsContent() {
                             src={primaryImage}
                             alt={product.name}
                             className="w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105"
+                            loading="lazy"
+                            decoding="async"
                           />
                           {secondaryImage && secondaryImage !== primaryImage && (
                             <img
                               src={secondaryImage}
                               alt={`${product.name} alternate`}
                               className="w-full h-full object-cover object-top absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out group-hover:scale-105"
+                              loading="lazy"
+                              decoding="async"
                             />
                           )}
                         </Link>

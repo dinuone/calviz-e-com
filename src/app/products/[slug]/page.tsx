@@ -310,6 +310,8 @@ export default function ProductDetailPage() {
                       src={imgUrl}
                       alt={`${product.name} view ${idx + 1}`}
                       className="w-full h-full object-cover object-top"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute bottom-1 right-1 font-mono text-[9px] bg-black text-white px-1 font-bold">
                       0{idx + 1}
@@ -324,6 +326,8 @@ export default function ProductDetailPage() {
                   src={activeMainImage}
                   alt={product.name}
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  decoding="async"
+                  fetchPriority="high"
                 />
 
                 {/* Top Badge */}
@@ -943,6 +947,8 @@ export default function ProductDetailPage() {
                             src={img}
                             alt={rel.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                            decoding="async"
                           />
                         )}
                         <div className="absolute top-2 right-2 bg-black text-white px-2 py-0.5 rounded font-mono text-[9px] uppercase font-bold">

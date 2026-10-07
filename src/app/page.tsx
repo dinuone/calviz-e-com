@@ -763,12 +763,16 @@ export default function HomePage() {
                                 alt={product.name}
                                 className="w-full h-full object-cover object-top transition-all duration-700 ease-out group-hover:scale-105"
                                 src={displayImageUrl}
+                                loading="lazy"
+                                decoding="async"
                               />
                               {secondaryImageUrl && secondaryImageUrl !== displayImageUrl && (
                                 <img
                                   alt={`${product.name} alternate view`}
                                   className="w-full h-full object-cover object-top absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out group-hover:scale-105"
                                   src={secondaryImageUrl}
+                                  loading="lazy"
+                                  decoding="async"
                                 />
                               )}
                             </>
@@ -968,6 +972,8 @@ export default function HomePage() {
                               alt={featured.title}
                               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                               src={featured.imageUrl}
+                              loading="lazy"
+                              decoding="async"
                             />
                             {featured.badgeText && (
                               <div className="absolute top-3 left-3 bg-black/90 backdrop-blur-sm text-white px-3 py-1 rounded font-mono text-xs uppercase font-extrabold border border-white/20 tracking-wider">
@@ -1007,6 +1013,8 @@ export default function HomePage() {
                                 alt={banner.title}
                                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                                 src={banner.imageUrl}
+                                loading="lazy"
+                                decoding="async"
                               />
                               {banner.badgeText && (
                                 <div className="absolute top-2.5 left-2.5 bg-black/90 backdrop-blur-sm text-white px-2.5 py-1 rounded font-mono text-[10px] uppercase font-extrabold border border-white/20 tracking-wider">
@@ -1112,6 +1120,8 @@ export default function HomePage() {
                       src={offersConfig.heroImageUrl || "https://lh3.googleusercontent.com/aida/AEtjO1W2UlicQK-ALNnpCFI_VnuAFHutBsM5uozFpmtPjMXZsKgJaWhuXUp4SDT1tJNzteqkhaiH2znBpGa_yQ2sr3WBt_5huSnSvMcSV6thVGD_KhYlLUIVjIqtwj2g5iI8la0TFUIpcr1C06lWj9EtWpnFrZ06wCyOupxEFBXyjgGa-3zYp-HEWnXyUBhZqXtBhAWnLx6mdqBN9l2gOhTIPTpQU8-meqP0eOIh29qFsd0yU35In11zyiQ7kKk"}
                       alt="CALVIZ Archival Heavyweight Model Editorial"
                       className="w-full h-full object-cover object-center opacity-35 scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
+                      loading="lazy"
+                      decoding="async"
                     />
                     {/* High-contrast multi-stop vignette gradients */}
                     <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black via-black/90 sm:via-black/85 to-black/40"></div>
@@ -1227,6 +1237,8 @@ export default function HomePage() {
                             src={card.imageUrl}
                             alt={card.title}
                             className="w-full h-full object-cover opacity-20 scale-100 group-hover:scale-110 transition-transform duration-700 ease-out"
+                            loading="lazy"
+                            decoding="async"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/90 to-neutral-950/60"></div>
                         </div>
