@@ -225,16 +225,16 @@ export default function AuthModal() {
           <div className="mb-6">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-neutral-100 border border-neutral-200 text-[10px] font-mono tracking-widest text-neutral-700 uppercase mb-2">
               <Sparkles className="w-3 h-3 text-emerald-600" />
-              <span>CALVIZ CLIENT</span>
+              <span>CALVIZ ACCOUNT</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-neutral-950 font-mono">
-              {title || (tab === "login" ? "SIGN IN TO ATELIER" : "CREATE CLIENT PROFILE")}
+              {title || (tab === "login" ? "SIGN IN" : "CREATE ACCOUNT")}
             </h2>
             <p className="text-xs text-neutral-500 font-mono mt-1">
               {description ||
                 (tab === "login"
-                  ? "Access your private wishlist, curated orders, and priority capsule drops."
-                  : "Register to unlock client privileges, doorstep tracking, and wishlist syncing.")}
+                  ? "Access your saved wishlist, order history, and express checkout."
+                  : "Register to unlock saved addresses, order tracking, and wishlist syncing.")}
             </p>
           </div>
 
@@ -264,7 +264,7 @@ export default function AuthModal() {
                   : "text-neutral-600 hover:text-black"
                 }`}
             >
-              New Client
+              Create Account
             </button>
           </div>
 

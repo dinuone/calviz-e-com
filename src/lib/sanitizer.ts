@@ -1,6 +1,7 @@
 /**
- * Front-end input validation, anti-XSS, and anti-SQL Injection protection.
- * Detects and blocks malicious scripts, SQL injection patterns, HTML tags, and invalid phone numbers.
+ * Front-end input validation, anti-XSS, anti-SQL Injection, and anti-traversal protection.
+ * Detects and blocks malicious scripts, SQL injection patterns, HTML tags, path traversal, and invalid phone numbers.
+ * Includes pre-decoding (URL and HTML entity decoding) to thwart obfuscation and bypass attempts.
  */
 
 // Patterns indicating SQL injection attempts or dangerous database manipulation
@@ -30,10 +31,28 @@ const MALICIOUS_PATTERNS = [
   /javascript\s*:/i,
   /vbscript\s*:/i,
   /data\s*:\s*text\/html/i,
-  /on(load|error|click|mouseover|focus|blur|change|submit|keydown|keypress|keyup)\s*=/i,
-  /<\s*(iframe|object|embed|svg|applet|meta|link|style|base|form)[^>]*>/i,
-  /eval\s*\(/i,
-  /expression\s*\(/i,
+  /\bon[a-z]{3,24}\s*=/i,
+  /<\s*(iframe|object|embed|svg|applet|meta|link|style|base|form|input|button|details|marquee|template)[^>]*>/i,
+  /\beval\s*\(/i,
+  /\bexpression\s*\(/i,
+  /\b(document|window)\.(location|cookie|write)\b/i,
+];
+
+// Path traversal patterns
+const PATH_TRAVERSAL_PATTERNS = [
+  /\.\.[\/\\]/,
+  /[\/\\]\.\./,
+  /%2e%2e/i,
+  /\.\.%2f/i,
+  /%2f\.\./i,
+  /\.\.%5c/i,
+  /%5c\.\./i,
+];
+
+// Basic OS command injection patterns
+const COMMAND_INJECTION_PATTERNS = [
+  /[;&|`]\s*(cat|ls|rm|chmod|chown|wget|curl|nc|bash|sh|powershell|cmd)\b/i,
+  /\$\([^\)]+\)/,
 ];
 
 // Basic HTML tag detection for strict plain-text fields (names, addresses, phones)
@@ -47,11 +66,66 @@ const LK_MOBILE_REGEX = /^(?:(?:\+?94|0)?)(7[0-9]{8})$/;
 const PHONE_DANGEROUS_CHARS = /[<>'"`\\;=\/]/;
 
 /**
- * Checks whether an input contains SQL injection patterns.
+ * Pre-decodes URL and HTML-entity encoded variants to prevent evasion/obfuscation.
+ */
+function getDecodedVariants(input: string): string[] {
+  const variants = [input];
+
+  try {
+    const urlDecoded = decodeURIComponent(input);
+    if (urlDecoded !== input) {
+      variants.push(urlDecoded);
+      try {
+        const doubleDecoded = decodeURIComponent(urlDecoded);
+        if (doubleDecoded !== urlDecoded && !variants.includes(doubleDecoded)) {
+          variants.push(doubleDecoded);
+        }
+      } catch {
+        // ignore malformed double decode
+      }
+    }
+  } catch {
+    // ignore malformed URI
+  }
+
+  // HTML entity decode basic tokens
+  for (const v of [...variants]) {
+    const htmlDecoded = v
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&amp;/gi, "&")
+      .replace(/&#x([0-9a-f]+);?/gi, (_, hex) => {
+        try {
+          return String.fromCharCode(parseInt(hex, 16));
+        } catch {
+          return _;
+        }
+      })
+      .replace(/&#([0-9]+);?/gi, (_, dec) => {
+        try {
+          return String.fromCharCode(parseInt(dec, 10));
+        } catch {
+          return _;
+        }
+      });
+
+    if (!variants.includes(htmlDecoded)) {
+      variants.push(htmlDecoded);
+    }
+  }
+
+  return variants;
+}
+
+/**
+ * Checks whether an input contains SQL injection patterns (including encoded variants).
  */
 export function containsSqlInjection(input?: string | null): boolean {
   if (!input || typeof input !== "string") return false;
-  return SQL_INJECTION_PATTERNS.some((pattern) => pattern.test(input));
+  const variants = getDecodedVariants(input);
+  return variants.some((v) => SQL_INJECTION_PATTERNS.some((pattern) => pattern.test(v)));
 }
 
 /**
@@ -59,7 +133,39 @@ export function containsSqlInjection(input?: string | null): boolean {
  */
 export function containsMaliciousScript(input?: string | null): boolean {
   if (!input || typeof input !== "string") return false;
-  return MALICIOUS_PATTERNS.some((pattern) => pattern.test(input));
+  const variants = getDecodedVariants(input);
+  return variants.some((v) => MALICIOUS_PATTERNS.some((pattern) => pattern.test(v)));
+}
+
+/**
+ * Checks whether an input contains path traversal attempts (../, ..\, %2e%2e).
+ */
+export function containsPathTraversal(input?: string | null): boolean {
+  if (!input || typeof input !== "string") return false;
+  const variants = getDecodedVariants(input);
+  return variants.some((v) => PATH_TRAVERSAL_PATTERNS.some((pattern) => pattern.test(v)));
+}
+
+/**
+ * Checks whether an input contains command injection attempts.
+ */
+export function containsCommandInjection(input?: string | null): boolean {
+  if (!input || typeof input !== "string") return false;
+  const variants = getDecodedVariants(input);
+  return variants.some((v) => COMMAND_INJECTION_PATTERNS.some((pattern) => pattern.test(v)));
+}
+
+/**
+ * High-level check for any malicious payload (XSS, SQLi, traversal, command injection).
+ */
+export function containsMaliciousPayload(input?: string | null): boolean {
+  if (!input || typeof input !== "string") return false;
+  return (
+    containsMaliciousScript(input) ||
+    containsSqlInjection(input) ||
+    containsPathTraversal(input) ||
+    containsCommandInjection(input)
+  );
 }
 
 /**
@@ -67,7 +173,8 @@ export function containsMaliciousScript(input?: string | null): boolean {
  */
 export function containsHtml(input?: string | null): boolean {
   if (!input || typeof input !== "string") return false;
-  return HTML_TAG_PATTERN.test(input) || containsMaliciousScript(input);
+  const variants = getDecodedVariants(input);
+  return variants.some((v) => HTML_TAG_PATTERN.test(v) || containsMaliciousScript(v));
 }
 
 /**
@@ -91,8 +198,13 @@ export function validateSriLankanMobile(phone?: string | null): {
 
   const trimmed = phone.trim();
 
-  // Reject malicious characters
-  if (PHONE_DANGEROUS_CHARS.test(trimmed) || containsSqlInjection(trimmed) || containsMaliciousScript(trimmed)) {
+  // Reject malicious characters and payloads
+  if (
+    PHONE_DANGEROUS_CHARS.test(trimmed) ||
+    containsSqlInjection(trimmed) ||
+    containsMaliciousScript(trimmed) ||
+    containsPathTraversal(trimmed)
+  ) {
     return {
       isValid: false,
       normalized: "",
@@ -123,7 +235,7 @@ export function validateSriLankanMobile(phone?: string | null): {
 }
 
 /**
- * Validates a plain text field and returns an error message if invalid (XSS, SQLi, or HTML tags).
+ * Validates a plain text field and returns an error message if invalid (XSS, SQLi, HTML tags, traversal).
  */
 export function validateSafePlainText(
   value: string | undefined | null,
@@ -139,6 +251,10 @@ export function validateSafePlainText(
     return `${fieldName} contains prohibited database query syntax.`;
   }
 
+  if (containsPathTraversal(value)) {
+    return `${fieldName} contains prohibited path navigation sequences.`;
+  }
+
   if (containsHtml(value)) {
     return `${fieldName} cannot contain HTML tags or formatting.`;
   }
@@ -147,7 +263,7 @@ export function validateSafePlainText(
 }
 
 /**
- * Validates general text (like messages or reviews) preventing scripts and SQLi.
+ * Validates general text (like messages or reviews) preventing scripts, SQLi, and path traversal.
  */
 export function validateSafeTextInput(
   value: string | undefined | null,
@@ -161,6 +277,10 @@ export function validateSafeTextInput(
 
   if (containsSqlInjection(value)) {
     return `${fieldName} contains prohibited database query syntax.`;
+  }
+
+  if (containsPathTraversal(value)) {
+    return `${fieldName} contains prohibited path navigation sequences.`;
   }
 
   return null;

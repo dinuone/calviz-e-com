@@ -60,7 +60,7 @@ function PageLoaderContent() {
           <div className="absolute inset-y-0 left-0 bg-black rounded-full animate-calviz-loader-bar" />
         </div>
 
-        {/* Atelier Coordinates Status */}
+        {/* Loading Status */}
         <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-neutral-400 font-bold mt-4 animate-pulse">
           CALVIZ  // LOADING
         </span>

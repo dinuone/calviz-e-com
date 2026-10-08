@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "About CALVIZ // Architectural Ready-to-Wear Atelier Colombo",
-  description: "Learn about CALVIZ: Heavyweight 240 GSM combed cotton garments engineered with architectural permanence, zero collar sag, and handcrafted in Colombo, Sri Lanka.",
+  title: "About CALVIZ // Premium Streetwear Colombo",
+  description: "Learn about CALVIZ: Premium heavyweight combed cotton streetwear crafted for lasting comfort, zero collar sag, and modern minimalist style.",
 };
 
 export default function AboutPage() {
@@ -33,15 +33,15 @@ export default function AboutPage() {
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-900 text-white rounded-full font-mono text-[11px] uppercase tracking-wider shadow-xs border border-neutral-800">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>TEXTILE LAB</span>
+              <span>OUR STORY</span>
             </div>
 
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase text-black tracking-tight font-mono leading-none">
-              ARCHITECTURAL FORM. ARCHIVAL TEXTILES.
+              PREMIUM HEAVYWEIGHT STREETWEAR.
             </h1>
 
             <p className="text-sm md:text-base text-neutral-600 max-w-2xl leading-relaxed font-medium">
-              CALVIZ was established with a singular manifesto: to craft luxury streetwear silhouettes that defy the fleeting disposable fashion cycle through uncompromising structural weight and artisanal precision.
+              CALVIZ was created with a clear purpose: to craft premium streetwear that lasts. We focus on durable heavyweight cotton, flawless fits, and clean, modern styles that outlast fast-fashion trends.
             </p>
           </div>
 
@@ -50,18 +50,18 @@ export default function AboutPage() {
             <div className="md:col-span-8 relative rounded-2xl overflow-hidden border border-neutral-200 shadow-sm group min-h-[360px] md:min-h-[480px]">
               <img
                 src="/atelier-studio.jpg"
-                alt="CALVIZ Atelier Colombo"
+                alt="CALVIZ Colombo Design Studio"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-95"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10 text-white">
                 <span className="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold mb-1">
-                  ATELIER LABORATORY
+                  OUR DESIGN STUDIO
                 </span>
                 <h3 className="text-xl md:text-2xl font-black uppercase font-mono tracking-tight">
-                  ENGINEERED WITH ARCHIVAL PERMANENCE
+                  CRAFTED FOR DURABILITY &amp; STYLE
                 </h3>
                 <p className="text-xs md:text-sm text-neutral-300 max-w-xl mt-2 leading-relaxed">
-                  Every pattern cut, silhouette block, and structural seam is calibrated in our domestic workshop to guarantee lifetime drape integrity.
+                  Every pattern cut, silhouette block, and structural seam is crafted in our local workshop to guarantee a long-lasting, comfortable fit.
                 </p>
               </div>
             </div>
@@ -69,18 +69,18 @@ export default function AboutPage() {
             <div className="md:col-span-4 relative rounded-2xl overflow-hidden border border-neutral-200 shadow-sm group min-h-[300px] md:min-h-[480px] bg-neutral-900">
               <img
                 src="/textile-craft.jpg"
-                alt="CALVIZ 240 GSM Combed Cotton Craft"
+                alt="CALVIZ Heavyweight Combed Cotton Craft"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-90"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-6 md:p-8 text-white">
                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-400 font-bold mb-1">
-                  250 / 320 GSM COMBED COTTON
+                  PREMIUM HEAVYWEIGHT COTTON
                 </span>
                 <h3 className="text-lg md:text-xl font-black uppercase font-mono tracking-tight">
                   ZERO COLLAR SAG
                 </h3>
                 <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
-                  Custom high-density 1x1 heavy ribbing reinforced with double-needle lockstitching.
+                  Durable ribbed neck collar reinforced with double-needle lockstitching that stays crisp wash after wash.
                 </p>
               </div>
             </div>
@@ -93,14 +93,14 @@ export default function AboutPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
               <div>
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold">
-                  TECHNICAL BLUEPRINT
+                  OUR STANDARDS
                 </p>
                 <h2 className="text-2xl md:text-4xl font-black uppercase text-black font-mono tracking-tight mt-1">
                   HOW CALVIZ ELEVATES STREETWEAR
                 </h2>
               </div>
               <p className="text-xs md:text-sm text-neutral-600 max-w-md font-medium">
-                We reject fast-fashion synthetics. Each piece is treated as a structural work of garment architecture.
+                We reject fast-fashion synthetics. Every piece is crafted from premium, high-density cotton.
               </p>
             </div>
 
@@ -111,10 +111,10 @@ export default function AboutPage() {
                   <Layers className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-black uppercase text-black font-mono tracking-tight mb-2">
-                  250 / 320 GSM DENSE KNIT
+                  PREMIUM HEAVYWEIGHT KNIT
                 </h3>
                 <p className="text-xs md:text-sm text-neutral-600 leading-relaxed font-medium">
-                  Spun from 100% long-staple combed cotton fibres. Produces a buttery, heavyweight tactile hand-feel that naturally holds an architectural boxy drop.
+                  Spun from 100% long-staple combed cotton fibres. Produces a soft, heavyweight feel that holds a clean relaxed drape.
                 </p>
                 <div className="mt-4 pt-4 border-t border-neutral-200 flex items-center gap-2 font-mono text-xs text-neutral-500">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -131,7 +131,7 @@ export default function AboutPage() {
                   ZERO SAG COLLAR
                 </h3>
                 <p className="text-xs md:text-sm text-neutral-600 leading-relaxed font-medium">
-                  Engineered with heavy-gauge Lycra-infused rib knit collars. Keeps a crisp, flush neckline that never folds, droops, or bacon-necks across 50+ wash cycles.
+                  Crafted with high-elasticity ribbed collars that stay crisp, flat, and never loosen or sag after repeated washes.
                 </p>
                 <div className="mt-4 pt-4 border-t border-neutral-200 flex items-center gap-2 font-mono text-xs text-neutral-500">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -145,10 +145,10 @@ export default function AboutPage() {
                   <Award className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-black uppercase text-black font-mono tracking-tight mb-2">
-                  LOCAL ATELIER IMPACT
+                  ETHICAL LOCAL CRAFTSMANSHIP
                 </h3>
                 <p className="text-xs md:text-sm text-neutral-600 leading-relaxed font-medium">
-                  Proudly cut, assembled, and finished in Sri Lanka by master artisans receiving ethical fair living wages and working under world-class production protocols.
+                  Proudly cut, assembled, and finished in Sri Lanka by skilled makers receiving fair living wages and working under world-class production standards.
                 </p>
                 <div className="mt-4 pt-4 border-t border-neutral-200 flex items-center gap-2 font-mono text-xs text-neutral-500">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -292,13 +292,13 @@ export default function AboutPage() {
         <section className="max-w-7xl mx-auto px-4 md:px-8 text-center mt-12">
           <div className="p-10 md:p-14 bg-white rounded-3xl border border-neutral-200 shadow-sm space-y-4 max-w-4xl mx-auto">
             <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold block">
-              READY FOR UNCOMPROMISING FORM?
+              READY FOR ELEVATED BASICS?
             </span>
             <h2 className="text-2xl md:text-4xl font-black uppercase text-black font-mono tracking-tight">
-              EXPLORE THE NEW ARCHIVAL DROPS
+              EXPLORE OUR LATEST DROPS
             </h2>
             <p className="text-xs md:text-sm text-neutral-600 max-w-xl mx-auto leading-relaxed font-medium">
-              Limited capsule quantities crafted per batch. Experience true 250 GSM architectural heavyweight cotton.
+              Limited quantities crafted per batch. Experience premium heavyweight streetwear cotton.
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <Link

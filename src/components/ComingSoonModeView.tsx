@@ -21,8 +21,8 @@ interface ComingSoonModeViewProps {
 }
 
 export default function ComingSoonModeView({
-  headline = "NEXT CAPSULE UNVEILING // DROP 02",
-  message = "Strictly limited to 250 heavy-milled archival units per silhouette. Enter your WhatsApp or SMS contact to secure 2-hour priority early allocation before public release.",
+  headline = "NEW DROP COMING SOON // DROP 02",
+  message = "Strictly limited pieces per design. Enter your WhatsApp or mobile number to receive early access before public release.",
   targetDateUtc,
   supportPhone = "+94 70 490 1027",
   enableVipSignup = true,
@@ -114,7 +114,7 @@ export default function ComingSoonModeView({
       <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-16 text-center space-y-8 my-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-white font-mono text-xs uppercase font-bold shadow-2xl">
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-          <span>CAPSULE RELEASE COUNTDOWN</span>
+          <span>NEW DROP COUNTDOWN</span>
         </div>
 
         {/* Hero Title */}
@@ -155,7 +155,7 @@ export default function ComingSoonModeView({
           </div>
         )}
 
-        {/* Priority Early Allocation Form */}
+        {/* Priority Early Access Form */}
         {enableVipSignup && (
           <div className="max-w-md mx-auto pt-2">
             {subscribed ? (
@@ -163,8 +163,8 @@ export default function ComingSoonModeView({
                 <div className="w-10 h-10 rounded-full bg-purple-900 text-purple-300 flex items-center justify-center mx-auto mb-2">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
-                <p className="font-bold text-purple-300 uppercase tracking-wider">EARLY ALLOCATION PASS REGISTERED</p>
-                <p className="text-neutral-400 text-[11px]">Your priority 2-hour checkout link will be sent to your WhatsApp/SMS before public release.</p>
+                <p className="font-bold text-purple-300 uppercase tracking-wider">EARLY ACCESS REGISTERED</p>
+                <p className="text-neutral-400 text-[11px]">Your priority early access link will be sent to your WhatsApp/SMS before public release.</p>
               </div>
             ) : (
               <form onSubmit={handleVipSubmit} className="space-y-2">
@@ -183,13 +183,13 @@ export default function ComingSoonModeView({
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-6 btn-add-to-bag text-white font-mono text-xs font-bold uppercase transition-all cursor-pointer disabled:opacity-50"
+                    className="px-6 bg-black hover:text-white btn-black-animated text-white font-mono text-xs font-bold uppercase transition-all cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? "..." : "GET ACCESS"}
                   </button>
                 </div>
                 <p className="text-[10px] font-mono text-neutral-500">
-                  🔒 No spam. Only single-use priority allocation dispatch passes.
+                  🔒 No spam. Only official early access announcements.
                 </p>
               </form>
             )}
@@ -199,7 +199,7 @@ export default function ComingSoonModeView({
         {/* WhatsApp Direct Help */}
         <div className="pt-2">
           <a
-            href="https://wa.me/94704901027?text=Hello%20CALVIZ%20Atelier%2C%20I%20am%20inquiring%20about%20the%20upcoming%20drop."
+            href="https://wa.me/94704901027?text=Hello%20CALVIZ%2C%20I%20am%20inquiring%20about%20the%20upcoming%20drop."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#25D366] font-mono text-xs font-bold transition-all shadow-sm hover:scale-102"

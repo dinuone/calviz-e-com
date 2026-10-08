@@ -4,8 +4,8 @@ import Link from "next/link";
 import { ShieldCheck, Truck, RefreshCw, Clock, Lock, CheckCircle2, ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: "Client Care & Policies | CALVIZ Atelier",
-  description: "Explore CALVIZ 24-hour express courier delivery SLA, 7-day effortless size exchange protocol, payment security, and privacy standards.",
+  title: "Customer Support & Policies | CALVIZ",
+  description: "Explore CALVIZ 24-hour express courier delivery, 7-day size exchange, payment security, and privacy standards.",
 };
 
 export default function PolicyPage() {
@@ -17,10 +17,10 @@ export default function PolicyPage() {
         {/* Header Banner */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold block mb-2">
-            CLIENT ASSURANCE PROTOCOLS
+            CUSTOMER ASSURANCE
           </span>
           <h1 className="text-3xl md:text-4xl font-black uppercase text-black tracking-tight font-mono">
-            SHIPPING, EXCHANGES &amp; ATELIER POLICIES
+            SHIPPING, EXCHANGES &amp; STORE POLICIES
           </h1>
           <p className="text-sm text-neutral-600 mt-3 font-medium leading-relaxed">
             CALVIZ operates with strict quality control, sealed packaging standards, and island-wide express courier fulfillment.
@@ -35,13 +35,13 @@ export default function PolicyPage() {
               <Truck className="w-5 h-5" />
             </div>
             <span className="font-mono text-[10px] uppercase tracking-widest text-emerald-600 font-bold block mb-1">
-              LOGISTICS SLA
+              DELIVERY PROMISE
             </span>
             <h3 className="text-lg font-black uppercase text-black font-mono tracking-tight">
               24-Hour Doorstep Delivery
             </h3>
             <p className="text-xs text-neutral-600 mt-2 leading-relaxed font-medium">
-              Orders confirmed before 2:00 PM are dispatched immediately. Standard delivery across Colombo within 24 hours, and 48–72 hours island-wide via Royal Express Courier & Logistics.
+              Orders confirmed before 2:00 PM are dispatched immediately. Standard delivery across Colombo within 24 hours, and 48–72 hours island-wide via Royal Express Courier &amp; Logistics.
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export default function PolicyPage() {
               7-Day Size Exchange
             </h3>
             <p className="text-xs text-neutral-600 mt-2 leading-relaxed font-medium">
-              If your garment requires sizing adjustments, notify our WhatsApp concierge within 7 calendar days of delivery. Replacement sizes are dispatched directly to your doorstep.
+              If your garment requires sizing adjustments, notify our WhatsApp support team within 7 calendar days of delivery. Replacement sizes are dispatched directly to your doorstep.
             </p>
           </div>
 
@@ -140,7 +140,7 @@ export default function PolicyPage() {
               4. Client Privacy &amp; Data Security
             </h2>
             <p className="text-xs sm:text-sm text-neutral-700 leading-relaxed">
-              CALVIZ is committed to protecting your client data. Phone numbers and delivery addresses are encrypted and exclusively utilized for courier dispatch, delivery SMS notifications, and VIP capsule announcements. We do not sell or share client records with third parties.
+              CALVIZ is committed to protecting your privacy. Phone numbers and delivery addresses are encrypted and exclusively used for order fulfillment, delivery notifications, and official new drop announcements. We do not sell or share customer records with third parties.
             </p>
           </section>
         </div>
@@ -152,7 +152,7 @@ export default function PolicyPage() {
               NEED IMMEDIATE ASSISTANCE?
             </span>
             <p className="text-sm font-bold uppercase mt-0.5">
-              Our Colombo Atelier Client Concierge is available 9:00 AM – 8:00 PM daily.
+              Our Colombo Customer Support is available 9:00 AM – 8:00 PM daily.
             </p>
           </div>
           <a
@@ -161,7 +161,7 @@ export default function PolicyPage() {
             rel="noopener noreferrer"
             className="px-5 py-2.5 bg-white text-black hover:bg-neutral-200 text-xs font-mono font-bold uppercase rounded-xl transition-all inline-flex items-center gap-1.5 shrink-0 justify-center shadow-md"
           >
-            <span>WHATSAPP CONCIERGE →</span>
+            <span>WHATSAPP SUPPORT →</span>
           </a>
         </div>
       </main>

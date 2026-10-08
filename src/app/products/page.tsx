@@ -28,8 +28,12 @@ import {
   Filter,
   CheckCircle2,
   Truck,
-  ShieldCheck
+  ShieldCheck,
+  Bell,
 } from "lucide-react";
+import RestockWaitlistModal, {
+  getWaitlistedProductIds,
+} from "@/components/RestockWaitlistModal";
 
 function ShopProductsContent() {
   const searchParams = useSearchParams();
@@ -70,6 +74,26 @@ function ShopProductsContent() {
   const { isAuthenticated } = useAuthStore();
   const { items: wishlistItems, toggleItem, setPendingProduct } = useWishlistStore();
   const { openModal } = useAuthModalStore();
+
+  // Restock Notification Waitlist State
+  const [waitlistProduct, setWaitlistProduct] = useState<ProductSummary | null>(null);
+  const [waitlistSize, setWaitlistSize] = useState<string>("M");
+  const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
+  const [waitlistedIds, setWaitlistedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setWaitlistedIds(getWaitlistedProductIds());
+  }, []);
+
+  const handleOpenWaitlist = (product: ProductSummary, size?: string) => {
+    setWaitlistProduct(product);
+    setWaitlistSize(size || selectedSizes[product.id] || product.availableSizes?.[0] || "M");
+    setIsWaitlistModalOpen(true);
+  };
+
+  const handleWaitlistSuccess = (productId: string) => {
+    setWaitlistedIds((prev) => (prev.includes(productId) ? prev : [...prev, productId]));
+  };
 
   // Load initial data
   useEffect(() => {
@@ -184,14 +208,20 @@ function ShopProductsContent() {
             : p.variants?.reduce((sum, v) => sum + (v.stockQuantity || 0), 0) ?? 0;
         if (inStockOnly && totalStock <= 0) return false;
 
-        // Price Limit
-        if (p.basePrice > priceLimit) return false;
+        // Price Limit (uses effective price)
+        const effectivePrice =
+          p.isOnSale && p.salePrice && p.salePrice < p.basePrice
+            ? p.salePrice
+            : p.basePrice;
+        if (effectivePrice > priceLimit) return false;
 
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === "price-low") return a.basePrice - b.basePrice;
-        if (sortBy === "price-high") return b.basePrice - a.basePrice;
+        const priceA = a.isOnSale && a.salePrice && a.salePrice < a.basePrice ? a.salePrice : a.basePrice;
+        const priceB = b.isOnSale && b.salePrice && b.salePrice < b.basePrice ? b.salePrice : b.basePrice;
+        if (sortBy === "price-low") return priceA - priceB;
+        if (sortBy === "price-high") return priceB - priceA;
         if (sortBy === "gsm-high") return (b.gsm || 0) - (a.gsm || 0);
         if (sortBy === "newest") return b.slug.localeCompare(a.slug);
         return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
@@ -229,7 +259,7 @@ function ShopProductsContent() {
       openModal({
         tab: "login",
         title: "SIGN IN FOR WISHLIST",
-        description: "Sign in to save this capsule piece to your private client wishlist.",
+        description: "Sign in to save this item to your wishlist.",
       });
       return;
     }
@@ -253,6 +283,11 @@ function ShopProductsContent() {
 
     const actualVariantId = matchedVariant?.id ? String(matchedVariant.id) : `${product.id}-${size}`;
 
+    const effectiveBasePrice =
+      product.isOnSale && product.salePrice && product.salePrice < product.basePrice
+        ? Number(product.salePrice)
+        : Number(product.basePrice);
+
     addItem({
       variantId: actualVariantId,
       productId: product.id,
@@ -260,7 +295,7 @@ function ShopProductsContent() {
       slug: product.slug,
       size: matchedVariant?.size || size,
       color: matchedVariant?.color || color,
-      unitPrice: Number(product.basePrice) + (matchedVariant?.priceAdjustment || 0),
+      unitPrice: effectiveBasePrice + (matchedVariant?.priceAdjustment || 0),
       quantity: 1,
       imageUrl: imageUrl,
       maxStock: matchedVariant ? matchedVariant.stockQuantity : stock,
@@ -280,6 +315,9 @@ function ShopProductsContent() {
     let badge = "NEW DROP";
     if (isOutOfStock) {
       badge = "SOLD OUT";
+    } else if (product.isOnSale && product.salePrice && product.salePrice < product.basePrice) {
+      const discount = Math.round(((product.basePrice - product.salePrice) / product.basePrice) * 100);
+      badge = `SALE -${discount}%`;
     } else if (isUrgent) {
       badge = "FEW UNITS LEFT";
     } else if (product.isFeatured) {
@@ -646,12 +684,15 @@ function ShopProductsContent() {
                         {/* Top Badges */}
                         <div className="absolute top-3 left-3 flex flex-col gap-1 pointer-events-none">
                           <span
-                            className={`px-2 py-0.5 text-[9px] font-mono uppercase font-bold tracking-wider ${metrics.isOutOfStock
-                              ? "bg-red-600 text-white"
-                              : metrics.isUrgent
+                            className={`px-2 py-0.5 text-[9px] font-mono uppercase font-bold tracking-wider ${
+                              metrics.isOutOfStock
+                                ? "bg-red-600 text-white"
+                                : metrics.badge.startsWith("SALE")
+                                ? "bg-red-600 text-white shadow-xs"
+                                : metrics.isUrgent
                                 ? "bg-amber-500 text-black"
                                 : "bg-black text-white"
-                              }`}
+                            }`}
                           >
                             {metrics.badge}
                           </span>
@@ -685,9 +726,20 @@ function ShopProductsContent() {
                             </Link>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="text-xs font-mono font-bold text-black block">
-                              LKR {product.basePrice.toLocaleString()}
-                            </span>
+                            {product.isOnSale && product.salePrice && product.salePrice < product.basePrice ? (
+                              <div>
+                                <span className="text-xs font-mono font-bold text-red-600 block">
+                                  LKR {product.salePrice.toLocaleString()}
+                                </span>
+                                <span className="text-[10px] font-mono text-neutral-400 line-through block">
+                                  LKR {product.basePrice.toLocaleString()}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs font-mono font-bold text-black block">
+                                LKR {product.basePrice.toLocaleString()}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -736,18 +788,38 @@ function ShopProductsContent() {
 
                     {/* Bottom Action Deck */}
                     <div className="p-4 pt-0">
-                      <button
-                        type="button"
-                        disabled={metrics.isOutOfStock}
-                        onClick={() => handleAddToBag(product)}
-                        className={`w-full py-2.5 text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 rounded-sm ${metrics.isOutOfStock
-                          ? "bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200"
-                          : "btn-add-to-bag cursor-pointer active:scale-98"
+                      {metrics.isOutOfStock ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenWaitlist(product, selectedSizes[product.id])}
+                          className={`w-full py-2.5 text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 rounded-sm cursor-pointer active:scale-98 ${
+                            waitlistedIds.includes(product.id)
+                              ? "bg-emerald-950/20 text-emerald-700 border border-emerald-500/50 hover:bg-emerald-950/30"
+                              : "bg-black text-white hover:bg-neutral-800 btn-black-animated border border-neutral-900 shadow-xs"
                           }`}
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110" />
-                        <span>{metrics.isOutOfStock ? "SOLD OUT" : "ADD TO BAG"}</span>
-                      </button>
+                        >
+                          {waitlistedIds.includes(product.id) ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>WAITLISTED ✓</span>
+                            </>
+                          ) : (
+                            <>
+                              <Bell className="w-3.5 h-3.5 text-amber-400" />
+                              <span>SOLD OUT • NOTIFY ME</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddToBag(product)}
+                          className="w-full py-2.5 text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 rounded-sm btn-add-to-bag hover:text-white group cursor-pointer active:scale-98"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110" />
+                          <span>ADD TO BAG</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -872,6 +944,15 @@ function ShopProductsContent() {
           </div>
         </div>
       )}
+
+      {/* Restock Notification Waitlist Modal */}
+      <RestockWaitlistModal
+        isOpen={isWaitlistModalOpen}
+        onClose={() => setIsWaitlistModalOpen(false)}
+        product={waitlistProduct}
+        initialSize={waitlistSize}
+        onSuccess={handleWaitlistSuccess}
+      />
     </div>
   );
 }

@@ -244,15 +244,15 @@ function LoginForm() {
         {/* Brand Header */}
         <div className="text-center mb-8">
           <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold block mb-2">
-            CALVIZ CLIENT PRIVILEGE ACCESS
+            CALVIZ ACCOUNT
           </span>
           <h1 className="text-2xl md:text-3xl font-black uppercase text-black tracking-tight">
-            {tab === "login" ? "SIGN IN TO ATELIER" : "CREATE CLIENT PROFILE"}
+            {tab === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 mt-2 font-medium">
             {tab === "login"
-              ? "Access order history, live tracking, and saved delivery coordinates."
-              : "Register to unlock 1-click checkout, express order lookup, and drop passes."}
+              ? "Access order history, live tracking, and saved delivery addresses."
+              : "Register to unlock 1-click checkout, express order lookup, and new drop alerts."}
           </p>
         </div>
 
@@ -270,7 +270,7 @@ function LoginForm() {
                 : "text-neutral-600 hover:text-black"
             }`}
           >
-            CLIENT SIGN IN
+            SIGN IN
           </button>
           <button
             type="button"
@@ -321,7 +321,7 @@ function LoginForm() {
           <div className="relative flex items-center justify-center my-6">
             <div className="border-t border-neutral-200 w-full" />
             <span className="bg-white px-3 text-[10px] font-mono uppercase tracking-widest text-neutral-400 whitespace-nowrap">
-              OR CONTINUE WITH ATELIER ID
+              OR CONTINUE WITH EMAIL
             </span>
             <div className="border-t border-neutral-200 w-full" />
           </div>
@@ -337,7 +337,7 @@ function LoginForm() {
                   <input
                     type="email"
                     required
-                    placeholder="client@atelier.com"
+                    placeholder="yourname@example.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm text-black placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"

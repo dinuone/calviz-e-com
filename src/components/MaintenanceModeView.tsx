@@ -26,8 +26,8 @@ interface MaintenanceModeViewProps {
 }
 
 export default function MaintenanceModeView({
-  headline = "ATELIER ARCHIVAL SYSTEM CALIBRATION",
-  message = "CALVIZ digital atelier is currently conducting scheduled infrastructure enhancements and pattern calibration. Dispatch and client care desks remain fully active.",
+  headline = "SCHEDULED STORE MAINTENANCE",
+  message = "CALVIZ online store is currently undergoing scheduled maintenance. Order fulfillment and WhatsApp support remain fully active.",
   targetDateUtc,
   supportPhone = "+94 70 490 1027",
   enableVipSignup = true,
@@ -140,7 +140,7 @@ export default function MaintenanceModeView({
         {timeLeft && (
           <div className="p-6 bg-neutral-900/80 backdrop-blur-md rounded-2xl border border-neutral-800 max-w-xl mx-auto shadow-2xl">
             <span className="text-[11px] font-mono uppercase text-neutral-400 font-bold block mb-4 tracking-widest">
-              ESTIMATED ATELIER REOPENING
+              ESTIMATED REOPENING
             </span>
             <div className="grid grid-cols-4 gap-3 font-mono">
               <div className="p-3 bg-black/60 rounded-xl border border-neutral-800">
@@ -175,7 +175,7 @@ export default function MaintenanceModeView({
             {subscribed ? (
               <div className="p-4 bg-emerald-950/60 border border-emerald-800 rounded-2xl text-center space-y-1 animate-fade-in font-mono text-xs">
                 <p className="font-bold text-emerald-400 uppercase">PRIORITY NOTIFICATION REGISTERED</p>
-                <p className="text-neutral-400 text-[11px]">We will notify your mobile instantly once the atelier goes live.</p>
+                <p className="text-neutral-400 text-[11px]">We will notify your mobile instantly once the website goes live.</p>
               </div>
             ) : (
               <form onSubmit={handleVipSubmit} className="space-y-2">
@@ -230,8 +230,8 @@ export default function MaintenanceModeView({
 
       {/* Footer Bar */}
       <footer className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-850/80 font-mono text-[11px] text-neutral-500">
-        <p>© {new Date().getFullYear()} CALVIZ ATELIER. ARCHITECTURAL READY-TO-WEAR.</p>
-        <p className="uppercase tracking-widest text-neutral-400">COLOMBO 07 // SRI LANKA</p>
+        <p>© {new Date().getFullYear()} CALVIZ ARCHITECTURAL READY-TO-WEAR.</p>
+        <p className="uppercase tracking-widest text-neutral-400">SRI LANKA</p>
       </footer>
     </div>
   );

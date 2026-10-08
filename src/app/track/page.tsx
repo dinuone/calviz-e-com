@@ -255,7 +255,7 @@ function TrackingContent() {
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-neutral-300 text-[10px] font-mono uppercase tracking-widest mb-4 border border-white/10">
             <Navigation className="w-3 h-3 text-emerald-400 animate-pulse" />
-            <span>Real-Time Logistics Telemetry</span>
+            <span>Real-Time Order Tracking</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white mb-2">
@@ -511,7 +511,7 @@ function TrackingContent() {
             </div>
           </div>
 
-          {/* Telemetry & Courier Route Card */}
+          {/* Delivery & Courier Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Courier Dispatch Specs */}
             <div className="p-6 bg-white border border-neutral-200 shadow-xs space-y-4">
@@ -528,7 +528,7 @@ function TrackingContent() {
                   <span className="font-bold text-neutral-900">Prompt Xpress / Domex Logistics</span>
                 </div>
                 <div>
-                  <span className="text-neutral-500 text-[10px] uppercase block">Waybill Consignment #</span>
+                  <span className="text-neutral-500 text-[10px] uppercase block">Tracking Number</span>
                   <span className="font-bold text-neutral-900">WB-LK-{order.orderNumber.replace("CLV-", "")}</span>
                 </div>
                 <div>
@@ -660,10 +660,10 @@ function TrackingContent() {
             </div>
           )}
 
-          {/* Ordered Items Manifest */}
+          {/* Ordered Items */}
           <div className="bg-white border border-neutral-200 p-6 sm:p-8 shadow-xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900 border-b border-neutral-100 pb-4 mb-4">
-              Items In This Consignment ({order.items.length})
+              Items In This Order ({order.items.length})
             </h3>
             <div className="divide-y divide-neutral-100">
               {order.items.map((item) => (

@@ -34,12 +34,12 @@ export default function NotFoundPage() {
   };
 
   const quickLinks = [
-    { label: "Heavyweight Boxy Tees", href: "/products", badge: "240 GSM" },
-    { label: "French Terry Hoodies", href: "/products", badge: "WINTER DROP" },
-    { label: "Archival Lookbook", href: "/#lookbook", badge: "PLATES" },
-    { label: "Live Order Tracking", href: "/track", badge: "24H SLA" },
-    { label: "Size Architecture Guide", href: "/size-guide", badge: "MATRIX" },
-    { label: "Direct Client Atelier", href: "/contact", badge: "SUPPORT" },
+    { label: "Heavyweight Boxy Tees", href: "/products", badge: "HEAVYWEIGHT" },
+    { label: "French Terry Hoodies", href: "/products", badge: "HOODIES" },
+    { label: "Brand Lookbook", href: "/#lookbook", badge: "LOOKBOOK" },
+    { label: "Live Order Tracking", href: "/track", badge: "24H EXPRESS" },
+    { label: "Size & Fit Guide", href: "/size-guide", badge: "GUIDE" },
+    { label: "Customer Support", href: "/contact", badge: "SUPPORT" },
   ];
 
   return (
@@ -51,10 +51,10 @@ export default function NotFoundPage() {
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-500/5 blur-3xl pointer-events-none rounded-full" />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 pt-36 md:pt-44 pb-20 relative z-10 max-w-5xl mx-auto w-full text-center">
-        {/* Monogram / Coordinate Pill */}
+        {/* Status Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-900/90 border border-neutral-800 text-[11px] font-mono tracking-widest uppercase text-neutral-400 mb-6 shadow-md animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>COORDINATES DISPLACED // STATUS 404</span>
+          <span>PAGE NOT FOUND // 404</span>
         </div>
 
         {/* Sculptural 404 Heading */}
@@ -63,13 +63,13 @@ export default function NotFoundPage() {
             404
           </h1>
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-mono tracking-[0.3em] uppercase text-emerald-400/90 bg-neutral-950/90 px-3 py-1 rounded-full border border-emerald-500/30 whitespace-nowrap">
-            ARCHIVE ENTRY NOT LOCATED
+            PAGE NOT FOUND
           </span>
         </div>
 
         {/* Narrative Description */}
         <p className="text-sm sm:text-base text-neutral-400 font-mono max-w-lg mx-auto leading-relaxed mb-8">
-          The silhouette, plate, or dossier you requested does not exist in the active CALVIZ registry. It may have been vaulted or moved to a new catalog coordinate.
+          The page or product you requested could not be found. It may have been moved, renamed, or is no longer available.
         </p>
 
         {/* Interactive Search Dispatch */}
@@ -80,14 +80,14 @@ export default function NotFoundPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search heavyweight silhouettes, cuts, GSM..."
+              placeholder="Search products, tees, hoodies..."
               className="w-full pl-11 pr-28 py-3.5 bg-neutral-900/80 border border-neutral-800 focus:border-white rounded-xl text-xs font-mono text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-white transition-all shadow-inner"
             />
             <button
               type="submit"
               className="absolute right-2 px-4 py-2 bg-white text-black hover:bg-neutral-200 text-xs font-mono font-bold uppercase rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
-              <span>Locate</span>
+              <span>Search</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -99,7 +99,7 @@ export default function NotFoundPage() {
             href="/"
             className="px-6 py-3.5 bg-white text-black hover:bg-neutral-200 font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 group cursor-pointer"
           >
-            <span>Return to Flagship</span>
+            <span>Return to Home</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
 
@@ -124,7 +124,7 @@ export default function NotFoundPage() {
         <div className="w-full border-t border-neutral-800/80 pt-10">
           <div className="text-center mb-6">
             <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500 font-bold block">
-              QUICK ATELIER DIRECTORY
+              QUICK DIRECTORY
             </span>
           </div>
 

@@ -6,8 +6,8 @@ import { fetchSizeCharts } from "@/lib/api";
 import { SizeChart } from "@/types";
 
 export const metadata = {
-  title: "Sizing & Fit Architecture Guide | CALVIZ Atelier",
-  description: "Dynamic measurement charts, silhouette proportions, and garment fit specifications calibrated from the CALVIZ atelier database.",
+  title: "Sizing & Fit Guide | CALVIZ",
+  description: "Measurement charts and garment fit guidelines for CALVIZ apparel.",
 };
 
 export const revalidate = 60;
@@ -23,13 +23,13 @@ export default async function SizeGuidePage() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold block mb-2">
-            SILHOUETTE SPECIFICATION
+            SIZE GUIDE
           </span>
           <h1 className="text-3xl md:text-4xl font-black uppercase text-black tracking-tight font-mono">
-            ATELIER SIZING &amp; FIT GUIDE
+            CALVIZ SIZING &amp; FIT GUIDE
           </h1>
           <p className="text-sm text-neutral-600 mt-3 font-medium leading-relaxed">
-            CALVIZ garments feature a distinct drop-shoulder silhouette with structured heavyweight fabric. All measurement matrices below are fetched live from our design atelier.
+            CALVIZ garments feature a relaxed drop-shoulder cut with structured heavyweight fabric. All measurement charts below reflect the exact sizing of our garments.
           </p>
         </div>
 
@@ -82,12 +82,12 @@ export default async function SizeGuidePage() {
                     </div>
                   </div>
 
-                  {/* Description & Model Telemetry */}
+                  {/* Description & Model Info */}
                   {(chart.description || chart.modelStats) && (
                     <div className="p-5 bg-neutral-50/70 border-b border-neutral-200/80 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono text-neutral-700">
                       {chart.description && (
                         <p className="leading-relaxed">
-                          <strong className="text-black uppercase block mb-0.5">Silhouette Architecture:</strong>
+                          <strong className="text-black uppercase block mb-0.5">Garment Fit:</strong>
                           {chart.description}
                         </p>
                       )}
@@ -95,7 +95,7 @@ export default async function SizeGuidePage() {
                         <div className="p-3 bg-white rounded-xl border border-neutral-200 flex items-start gap-2">
                           <Info className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />
                           <div>
-                            <strong className="text-black uppercase block mb-0.5">Model Telemetry:</strong>
+                            <strong className="text-black uppercase block mb-0.5">Model Info:</strong>
                             <p className="text-neutral-600">{chart.modelStats}</p>
                           </div>
                         </div>
@@ -158,7 +158,7 @@ export default async function SizeGuidePage() {
               Garment Specifications
             </h3>
             <p className="text-xs text-neutral-500 font-mono max-w-md mx-auto">
-              Size charts are currently being calibrated by the atelier team. Check back shortly or view specifications on individual product pages.
+              Size charts are currently being updated. Check back shortly or view specifications on individual product pages.
             </p>
           </div>
         )}
@@ -167,7 +167,7 @@ export default async function SizeGuidePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <div className="bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 space-y-4 shadow-xs">
             <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 font-bold block">
-              FIT ARCHITECTURE
+              FIT GUIDE
             </span>
             <h3 className="text-lg font-black uppercase text-black font-mono tracking-tight">
               HOW TO MEASURE

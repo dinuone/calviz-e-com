@@ -33,6 +33,8 @@ export interface ProductSummary {
   name: string;
   slug: string;
   basePrice: number;
+  isOnSale?: boolean;
+  salePrice?: number | null;
   gsm?: number;
   lowStockThreshold?: number;
   isFeatured: boolean;
@@ -81,6 +83,8 @@ export interface ProductDetail {
   slug: string;
   description?: string;
   basePrice: number;
+  isOnSale?: boolean;
+  salePrice?: number | null;
   gsm: number;
   lowStockThreshold?: number;
   isFeatured: boolean;

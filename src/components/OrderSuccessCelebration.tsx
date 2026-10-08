@@ -138,14 +138,14 @@ export default function OrderSuccessCelebration({
           {/* Capsule Tagline */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/15 rounded-full text-[10px] tracking-widest font-mono uppercase text-neutral-300 mb-3">
             <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
-            <span>ORDER CONFIRMED & ALLOCATED</span>
+            <span>ORDER CONFIRMED</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
             Thank You{customerName ? `, ${customerName}` : ""}!
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 max-w-sm mb-6 leading-relaxed">
-            Your garment order has been registered in the CALVIZ atelier dispatch queue.
+            Your order has been placed successfully and is being prepared for dispatch.
           </p>
 
           {/* Order Reference Number Banner */}
@@ -184,8 +184,8 @@ export default function OrderSuccessCelebration({
                 <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center font-bold text-xs mb-1 shadow-sm">
                   1
                 </div>
-                <span className="text-neutral-200 font-semibold">Allocated</span>
-                <span className="text-[9px] text-neutral-500">Inventory Reserved</span>
+                <span className="text-neutral-200 font-semibold">Confirmed</span>
+                <span className="text-[9px] text-neutral-500">Order Placed</span>
               </div>
 
               <div className="flex flex-col items-center">
@@ -193,7 +193,7 @@ export default function OrderSuccessCelebration({
                   2
                 </div>
                 <span className="text-neutral-400">Packaging</span>
-                <span className="text-[9px] text-neutral-600">Colombo Atelier</span>
+                <span className="text-[9px] text-neutral-600">Colombo Hub</span>
               </div>
 
               <div className="flex flex-col items-center">

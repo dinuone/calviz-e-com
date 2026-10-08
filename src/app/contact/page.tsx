@@ -117,13 +117,13 @@ export default function ContactPage() {
         <div className="relative rounded-3xl overflow-hidden border border-neutral-200 bg-neutral-900 text-white p-8 sm:p-12 mb-12 shadow-xl">
           <img
             src="/atelier-studio.jpg"
-            alt="CALVIZ Atelier"
+            alt="CALVIZ Studio"
             className="absolute inset-0 w-full h-full object-cover opacity-20 filter grayscale contrast-125"
           />
           <div className="relative z-10 max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white font-mono text-[11px] font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>DIRECT CLIENT</span>
+              <span>DIRECT SUPPORT</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight font-mono">
               CONNECT WITH CALVIZ
@@ -188,7 +188,7 @@ export default function ContactPage() {
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-neutral-500 uppercase text-[10px] block font-bold">ELECTRONIC DISPATCH</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block font-bold">EMAIL US</span>
                   <a href="mailto:info@calviz.lk" className="text-sm font-bold text-black hover:underline mt-0.5 block">
                     info@calviz.lk
                   </a>
@@ -200,7 +200,7 @@ export default function ContactPage() {
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-neutral-500 uppercase text-[10px] block font-bold">ATELIER STUDIO</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block font-bold">LOCATION</span>
                   <p className="text-xs font-semibold text-neutral-800 mt-0.5">
                     Island-Wide Logistics, Sri Lanka
                   </p>
@@ -242,13 +242,13 @@ export default function ContactPage() {
           <div className="lg:col-span-7 bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 md:p-10 shadow-sm">
             <div className="mb-6">
               <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold block mb-1">
-                TRANSMIT INQUIRY
+                GET IN TOUCH
               </span>
               <h2 className="text-2xl font-black uppercase text-black font-mono tracking-tight">
                 SEND A MESSAGE TO US
               </h2>
               <p className="text-xs text-neutral-600 mt-1 font-medium">
-                Our client relations desk responds to all formal inquiries within 2 to 4 working hours.
+                Our customer support team responds to all inquiries within 2 to 4 working hours.
               </p>
             </div>
 
@@ -258,10 +258,10 @@ export default function ContactPage() {
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <h3 className="text-base font-bold text-black uppercase font-mono">
-                  MESSAGE TRANSMITTED
+                  MESSAGE SENT
                 </h3>
                 <p className="text-xs text-neutral-600 font-medium max-w-md mx-auto">
-                  Thank you for contacting CALVIZ. Our atelier client support desk has received your message and will follow up shortly.
+                  Thank you for contacting CALVIZ. Our customer support team has received your message and will follow up shortly.
                 </p>
                 <button
                   type="button"
@@ -333,7 +333,7 @@ export default function ContactPage() {
                     <option value="Order Tracking & Courier Status">Order Tracking &amp; Courier Status</option>
                     <option value="Bank Transfer Payment Verification">Bank Transfer Payment Verification</option>
                     <option value="7-Day Size Exchange Request">7-Day Size Exchange Request</option>
-                    <option value="Corporate / Custom Capsule Order">Corporate / Custom Capsule Order</option>
+                    <option value="Corporate / Bulk Custom Order">Corporate / Bulk Custom Order</option>
                   </select>
                 </div>
 
@@ -376,17 +376,17 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-4 mt-2 btn-add-to-bag text-white rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-60"
+                  className="w-full py-4 mt-2 bg-black text-white hover:text-white btn-black-animated rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-60"
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>ENCRYPTING &amp; TRANSMITTING...</span>
+                      <span>SENDING MESSAGE...</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>TRANSMIT MESSAGE TO ATELIER</span>
+                      <span>SEND MESSAGE</span>
                     </>
                   )}
                 </button>
@@ -402,7 +402,7 @@ export default function ContactPage() {
                     <span>Verified Colombo Desk</span>
                   </div>
                   <div className="flex items-center gap-1 text-neutral-600">
-                    <span>⚡ 2-4h Response SLA</span>
+                    <span>⚡ 2-4h Response Time</span>
                   </div>
                 </div>
               </form>

@@ -39,7 +39,7 @@ interface CustomerReviewsSectionProps {
 }
 
 const REVIEW_TAGS = [
-  "Heavyweight 260GSM Cotton",
+  "Heavyweight Premium Cotton",
   "True Boxy Fit",
   "Stiff Collar Ribbing",
   "Zero Collar Sag After Wash",
@@ -309,13 +309,13 @@ export default function CustomerReviewsSection({
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-[10px] font-mono uppercase tracking-widest rounded-full mb-3">
               <Sparkles className="w-3 h-3 text-amber-400" />
-              <span>AUTHENTIC CLIENT EXPERIENCES</span>
+              <span>VERIFIED CUSTOMER REVIEWS</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-950">
-              Customer Reviews &amp; Drape Dossier
+              Customer Reviews &amp; Photos
             </h2>
             <p className="text-xs sm:text-sm text-neutral-600 font-mono mt-1">
-              Verified patron photography and honest reviews for {productName}.
+              Verified customer photos and honest feedback for {productName}.
             </p>
           </div>
 
@@ -739,7 +739,7 @@ export default function CustomerReviewsSection({
                   Review Submitted Successfully
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-600 font-mono max-w-md mx-auto leading-relaxed">
-                  Thank you for reviewing <strong className="text-black">{productName}</strong>. Your feedback helps our community and atelier artisans maintain peak quality.
+                  Thank you for reviewing <strong className="text-black">{productName}</strong>. Your feedback helps our community and team maintain top quality.
                 </p>
                 <div className="pt-4">
                   <button

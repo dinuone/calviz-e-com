@@ -27,7 +27,12 @@ import {
   X,
   Lock,
   Maximize2,
+  Bell,
+  CheckCircle2,
 } from "lucide-react";
+import RestockWaitlistModal, {
+  getWaitlistedProductIds,
+} from "@/components/RestockWaitlistModal";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -52,6 +57,14 @@ export default function ProductDetailPage() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isSizeChartZoomOpen, setIsSizeChartZoomOpen] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
+
+  // Restock Notification Waitlist Modal State
+  const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
+  const [waitlistedIds, setWaitlistedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setWaitlistedIds(getWaitlistedProductIds());
+  }, []);
 
   // Cart store
   const { addItem, openCart } = useCartStore();
@@ -170,6 +183,11 @@ export default function ProductDetailPage() {
 
   const activeMainImage = displayImages[activeImageIndex] || displayImages[0];
 
+  const effectiveBasePrice =
+    product?.isOnSale && product?.salePrice && Number(product.salePrice) < Number(product.basePrice)
+      ? Number(product.salePrice)
+      : Number(product?.basePrice || 0);
+
   const handleAddToCart = () => {
     if (!product || isOutOfStock) return;
 
@@ -180,7 +198,7 @@ export default function ProductDetailPage() {
       slug: product.slug,
       size: selectedSize,
       color: selectedColor || "Standard",
-      unitPrice: Number(product.basePrice) + (activeVariant?.priceAdjustment || 0),
+      unitPrice: effectiveBasePrice + (activeVariant?.priceAdjustment || 0),
       quantity: 1,
       imageUrl: activeMainImage,
       maxStock: currentStock,
@@ -203,7 +221,7 @@ export default function ProductDetailPage() {
       slug: product.slug,
       size: selectedSize,
       color: selectedColor || "Standard",
-      unitPrice: Number(product.basePrice) + (activeVariant?.priceAdjustment || 0),
+      unitPrice: effectiveBasePrice + (activeVariant?.priceAdjustment || 0),
       quantity: 1,
       imageUrl: activeMainImage,
       maxStock: currentStock,
@@ -215,7 +233,7 @@ export default function ProductDetailPage() {
   const handleDirectWhatsApp = () => {
     if (!product) return;
     const msg = encodeURIComponent(
-      `Hello CALVIZ, I would like to order "${product.name}" in Size ${selectedSize} (${selectedColor || "Standard"}). Price: LKR ${product.basePrice?.toLocaleString()}.`
+      `Hello CALVIZ, I would like to order "${product.name}" in Size ${selectedSize} (${selectedColor || "Standard"}). Price: LKR ${effectiveBasePrice.toLocaleString()}.`
     );
     window.open(`https://wa.me/94704901027?text=${msg}`, "_blank");
   };
@@ -228,7 +246,7 @@ export default function ProductDetailPage() {
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
             <span className="font-mono text-xs uppercase tracking-widest text-neutral-500">
-              ALLOCATING ATELIER SPECIMEN TELEMETRY...
+              LOADING PRODUCT DETAILS...
             </span>
           </div>
         </div>
@@ -243,11 +261,11 @@ export default function ProductDetailPage() {
         <Header />
         <div className="flex-1 max-w-2xl mx-auto px-4 py-32 text-center space-y-6">
           <div className="inline-block px-3 py-1 font-mono text-xs uppercase bg-neutral-100 border border-neutral-200 text-neutral-600">
-            RECORD NOT FOUND
+            NOT FOUND
           </div>
-          <h1 className="text-3xl font-bold uppercase tracking-tight">Product Archive Unavailable</h1>
+          <h1 className="text-3xl font-bold uppercase tracking-tight">Product Unavailable</h1>
           <p className="text-sm text-neutral-600 leading-relaxed font-mono">
-            The requested garment specimen is either currently in development, reserved, or has been rotated to the Calviz permanent archive.
+            The requested product is currently out of stock or no longer available.
           </p>
           <div className="pt-4">
             <Link
@@ -268,7 +286,7 @@ export default function ProductDetailPage() {
       <Header />
 
       <main className="flex-1 w-full pt-32 md:pt-36 pb-20">
-        {/* Specimen Context Telemetry & Navigation */}
+        {/* Product Breadcrumb Navigation */}
         <div className="w-full px-4 md:px-8 lg:px-12 py-3 bg-white border-b border-neutral-200">
           <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-neutral-500">
@@ -285,7 +303,7 @@ export default function ProductDetailPage() {
               </span>
               <span>/</span>
               <span className="text-black font-bold truncate max-w-[260px] md:max-w-none">
-                "{product.name}" // SPECIMEN #{activeVariant?.sku || product.slug.toUpperCase()}
+                "{product.name}" // SKU: {activeVariant?.sku || product.slug.toUpperCase()}
               </span>
             </div>
 
@@ -294,10 +312,10 @@ export default function ProductDetailPage() {
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="font-mono text-[10px] uppercase tracking-wider text-black font-semibold">
                   {isOutOfStock
-                    ? "STATUS // SOLD OUT"
+                    ? "SOLD OUT"
                     : isLowStock
-                      ? `LOW STOCK // ONLY ${currentStock} UNITS LEFT`
-                      : `IN STOCK // ${currentStock} UNITS READY`}
+                      ? `ONLY ${currentStock} LEFT IN STOCK`
+                      : `IN STOCK (${currentStock} AVAILABLE)`}
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-1.5 text-neutral-600 font-mono text-[10px] uppercase">
@@ -350,24 +368,32 @@ export default function ProductDetailPage() {
                 />
 
                 {/* Top Badge */}
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded shadow-xs border border-neutral-200">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-black font-semibold">
-                    SERIES ARCHIVE // ART. #{activeVariant?.sku || product.slug.toUpperCase()}
-                  </span>
+                <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
+                  <div className="bg-white/95 backdrop-blur px-3 py-1 rounded shadow-xs border border-neutral-200">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-black font-semibold">
+                      STYLE REF // #{activeVariant?.sku || product.slug.toUpperCase()}
+                    </span>
+                  </div>
+                  {product.isOnSale && product.salePrice && Number(product.salePrice) < Number(product.basePrice) && (
+                    <div className="bg-red-600 text-white font-mono text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded shadow-sm flex items-center gap-1 animate-pulse">
+                      <span>🏷️ ON SALE</span>
+                      <span>(-{Math.round(((Number(product.basePrice) - Number(product.salePrice)) / Number(product.basePrice)) * 100)}%)</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Spec Tags */}
                 <div className="absolute bottom-4 right-4 bg-black text-white px-3 py-1.5 rounded font-mono text-[10px] uppercase flex items-center gap-1.5 shadow-md">
                   <ZoomIn className="w-3.5 h-3.5" />
-                  <span>HEAVYWEIGHT INTERLOCK</span>
+                  <span>PREMIUM HEAVYWEIGHT</span>
                 </div>
 
                 <div className="absolute bottom-4 left-4 hidden sm:flex flex-col gap-1">
                   <span className="bg-white/95 backdrop-blur px-2 py-0.5 rounded font-mono text-[9px] tracking-widest text-black border border-neutral-200">
-                    COLOMBO ATELIER FINISH
+                    COLOMBO CRAFTED
                   </span>
                   <span className="bg-white/95 backdrop-blur px-2 py-0.5 rounded font-mono text-[9px] tracking-widest text-neutral-600 border border-neutral-200">
-                    SILICON PRE-SHRUNK WASH
+                    PRE-SHRUNK FINISH
                   </span>
                 </div>
               </div>
@@ -415,17 +441,31 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
 
-                {/* <div className="flex items-baseline gap-3 pt-1">
-                  <p className="text-2xl md:text-3xl font-bold font-mono text-black">
-                    LKR {Number(product.basePrice).toLocaleString()}
-                  </p>
+                <div className="flex flex-wrap items-baseline gap-3 pt-2">
+                  {product.isOnSale && product.salePrice && Number(product.salePrice) < Number(product.basePrice) ? (
+                    <>
+                      <p className="text-2xl md:text-3xl font-black font-mono text-red-600">
+                        LKR {Number(product.salePrice).toLocaleString()}
+                      </p>
+                      <p className="text-base md:text-lg font-mono text-neutral-400 line-through">
+                        LKR {Number(product.basePrice).toLocaleString()}
+                      </p>
+                      <span className="font-mono text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded uppercase tracking-wider">
+                        SAVE {Math.round(((Number(product.basePrice) - Number(product.salePrice)) / Number(product.basePrice)) * 100)}%
+                      </span>
+                    </>
+                  ) : (
+                    <p className="text-2xl md:text-3xl font-bold font-mono text-black">
+                      LKR {Number(product.basePrice).toLocaleString()}
+                    </p>
+                  )}
                   <p className="font-mono text-xs text-neutral-500">
-                    ≈ ${(Number(product.basePrice) / 300).toFixed(2)} USD
+                    ≈ ${(effectiveBasePrice / 300).toFixed(2)} USD
                   </p>
                   <span className="font-mono text-[10px] text-neutral-600 px-2 py-0.5 bg-neutral-100 rounded border border-neutral-200">
                     TAX INCL. // FREE SHIPPING OVER 10K
                   </span>
-                </div> */}
+                </div>
 
                 {/* <p className="text-xs text-neutral-600 leading-relaxed font-normal pt-1">
                   {product.description ||
@@ -530,47 +570,72 @@ export default function ProductDetailPage() {
 
               {/* Action Buttons */}
               <div className="space-y-2.5 pt-2">
-                {/* 1. Highlighted BUY NOW Button */}
-                <button
-                  type="button"
-                  onClick={handleBuyNow}
-                  disabled={isOutOfStock}
-                  className={`w-full py-3.5 px-6 rounded-lg flex items-center justify-center gap-2.5 transition-all font-mono text-xs uppercase tracking-widest font-bold cursor-pointer shadow-md ${isOutOfStock
-                    ? "bg-neutral-200 text-neutral-400 cursor-not-allowed"
-                    : "bg-black text-white hover:bg-neutral-800 active:scale-[0.99] btn-black-animated"
-                    }`}
-                >
-                  <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span>BUY NOW • INSTANT CHECKOUT</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-
-                {/* 2. Bordered ADD TO BAG Button */}
-                <button
-                  type="button"
-                  disabled={isOutOfStock}
-                  onClick={handleAddToCart}
-                  className={`w-full py-3 px-6 rounded-lg flex items-center justify-between group transition-all font-bold ${isOutOfStock
-                    ? "bg-neutral-100 text-neutral-400 border border-neutral-300 cursor-not-allowed"
-                    : addedAnimation
-                      ? "bg-emerald-600 text-white border-2 border-emerald-600 shadow-sm"
-                      : "bg-white text-neutral-900 border-2 border-neutral-900 hover:bg-neutral-900 hover:text-white cursor-pointer active:scale-[0.99] shadow-xs"
-                    }`}
-                >
-                  <span className="font-mono text-xs uppercase tracking-widest">
-                    {addedAnimation
-                      ? "ADDED TO BAG ✓"
-                      : isOutOfStock
-                        ? "SOLD OUT IN THIS SIZE"
-                        : `ADD TO BAG // LKR ${Number(product.basePrice).toLocaleString()}`}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[11px] uppercase text-neutral-500 group-hover:text-neutral-300 transition-colors">
-                      {addedAnimation ? "OPENING BAG..." : "ALLOCATE"}
-                    </span>
-                    <ShoppingBag className="w-4 h-4" />
+                {/* Out of Stock Waitlist vs Active Checkout Buttons */}
+                {isOutOfStock ? (
+                  <div className="space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsWaitlistModalOpen(true)}
+                      className={`w-full py-4 px-6 rounded-lg flex items-center justify-center gap-2.5 transition-all font-mono text-xs uppercase tracking-widest font-bold cursor-pointer shadow-md ${
+                        waitlistedIds.includes(product.id)
+                          ? "bg-emerald-950/20 text-emerald-700 border border-emerald-500/50 hover:bg-emerald-950/30"
+                          : "bg-black text-white hover:bg-neutral-800 btn-black-animated"
+                      }`}
+                    >
+                      {waitlistedIds.includes(product.id) ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>WAITLISTED FOR SIZE {selectedSize} ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bell className="w-4 h-4 text-amber-400" />
+                          <span>SOLD OUT • NOTIFY ME WHEN AVAILABLE</span>
+                        </>
+                      )}
+                    </button>
+                    <div className="flex items-center justify-between px-1 text-[11px] font-mono text-neutral-500">
+                      <span>⚡ Priority restock alert</span>
+                      <span>Zero spam • 1-click alert</span>
+                    </div>
                   </div>
-                </button>
+                ) : (
+                  <>
+                    {/* 1. Highlighted BUY NOW Button */}
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      className="w-full py-3.5 px-6 rounded-lg flex items-center justify-center gap-2.5 transition-all font-mono text-xs uppercase tracking-widest font-bold cursor-pointer shadow-md bg-black text-white hover:bg-neutral-800 active:scale-[0.99] btn-black-animated"
+                    >
+                      <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span>BUY NOW • INSTANT CHECKOUT</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+
+                    {/* 2. Bordered ADD TO BAG Button */}
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      className={`w-full py-3 px-6 rounded-lg flex items-center justify-between group transition-all font-bold ${
+                        addedAnimation
+                          ? "bg-emerald-600 text-white border-2 border-emerald-600 shadow-sm"
+                          : "bg-white text-neutral-900 border-2 border-neutral-900 hover:bg-neutral-900 hover:text-white cursor-pointer active:scale-[0.99] shadow-xs"
+                      }`}
+                    >
+                      <span className="font-mono text-xs uppercase tracking-widest">
+                        {addedAnimation
+                          ? "ADDED TO BAG ✓"
+                          : `ADD TO BAG // LKR ${(effectiveBasePrice + (activeVariant?.priceAdjustment || 0)).toLocaleString()}`}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] uppercase text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                          {addedAnimation ? "OPENING BAG..." : "ADD"}
+                        </span>
+                        <ShoppingBag className="w-4 h-4" />
+                      </div>
+                    </button>
+                  </>
+                )}
 
                 {/* 3. Direct WhatsApp Concierge Button */}
                 <button
@@ -618,10 +683,10 @@ export default function ProductDetailPage() {
                   <Zap className="w-5 h-5 text-black shrink-0 mt-0.5" />
                   <div>
                     <p className="font-mono text-xs text-black uppercase font-bold">
-                      ISLAND-WIDE LOGISTICS PROTOCOL
+                      ISLAND-WIDE DELIVERY
                     </p>
                     <p className="text-xs text-neutral-600 leading-relaxed">
-                      24-Hour Express across Colombo. 48-72 Hours for all Outstation consignments.
+                      24-Hour Express across Colombo. 48-72 Hours for all Outstation deliveries.
                     </p>
                   </div>
                 </div>
@@ -648,14 +713,14 @@ export default function ProductDetailPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
                 <p className="font-mono text-[11px] text-neutral-500 uppercase tracking-widest">
-                  ATELIER LABORATORY // TECHNICAL COMPOSITION
+                  FABRIC &amp; MATERIAL DETAILS
                 </p>
                 <h2 className="text-xl md:text-2xl font-bold text-black uppercase tracking-tight">
-                  MATERIAL SPECIFICATIONS &amp; BLUEPRINT
+                  MATERIAL SPECIFICATIONS &amp; DETAILS
                 </h2>
               </div>
               <p className="font-mono text-xs text-neutral-500">
-                SPEC_ID: COMBED-COTTON-PREMIUM
+                100% COMBED COTTON
               </p>
             </div>
 
@@ -669,7 +734,7 @@ export default function ProductDetailPage() {
                   : "text-neutral-600 hover:text-black"
                   }`}
               >
-                01 // TEXTILE &amp; WEAVE LAB
+                01 // FABRIC &amp; QUALITY
               </button>
 
               <button
@@ -691,7 +756,7 @@ export default function ProductDetailPage() {
                   : "text-neutral-600 hover:text-black"
                   }`}
               >
-                03 // DOORSTEP COD
+                03 // SHIPPING &amp; COD
               </button>
             </div>
 
@@ -758,13 +823,13 @@ export default function ProductDetailPage() {
                       </div>
                       <div>
                         <span className="font-mono text-[10px] text-neutral-500 uppercase font-semibold">
-                          GARMENT BLUEPRINT
+                          SIZE CHART
                         </span>
                         <h4 className="text-sm font-bold uppercase text-black">
-                          Visual Dimension &amp; Cut Diagram
+                          Visual Dimension &amp; Sizing Diagram
                         </h4>
                         <p className="text-xs text-neutral-600">
-                          Inspect seam-to-seam grading and tailored proportions for this garment.
+                          Inspect measurements and proportions for this garment.
                         </p>
                       </div>
                     </div>
@@ -774,7 +839,7 @@ export default function ProductDetailPage() {
                       className="px-3.5 py-2 bg-black text-white font-mono text-xs uppercase tracking-wider font-bold rounded hover:bg-neutral-800 transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
                     >
                       <Maximize2 className="w-3.5 h-3.5" />
-                      Expand Blueprint
+                      Expand Chart
                     </button>
                   </div>
                 )}
@@ -825,7 +890,7 @@ export default function ProductDetailPage() {
                   </div>
                 ) : (
                   <div className="p-8 text-center bg-neutral-50 rounded-lg border border-neutral-200 text-xs font-mono text-neutral-500">
-                    Detailed seam-to-seam grading for this product is calibrated by our atelier team. Check the Size Guide link for general silhouette specifications.
+                    Detailed measurements for this product will be available soon. Check our Size Guide for standard sizing specifications.
                   </div>
                 )}
 
@@ -879,7 +944,7 @@ export default function ProductDetailPage() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-neutral-200 pb-6">
               <div>
                 <p className="font-mono text-[11px] text-neutral-500 uppercase tracking-widest">
-                  CLIENT DOSSIER // TECHNICAL FEEDBACK
+                  CUSTOMER FEEDBACK // VERIFIED RATINGS
                 </p>
                 <h2 className="text-xl md:text-2xl font-bold text-black uppercase tracking-tight mt-1">
                   VERIFIED WEAR RATINGS &amp; REVIEWS
@@ -994,6 +1059,11 @@ export default function ProductDetailPage() {
                             decoding="async"
                           />
                         )}
+                        {rel.isOnSale && rel.salePrice && rel.salePrice < rel.basePrice ? (
+                          <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-0.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider shadow-xs">
+                            SALE -{Math.round(((rel.basePrice - rel.salePrice) / rel.basePrice) * 100)}%
+                          </div>
+                        ) : null}
                         <div className="absolute top-2 right-2 bg-black text-white px-2 py-0.5 rounded font-mono text-[9px] uppercase font-bold">
                           HEAVYWEIGHT
                         </div>
@@ -1005,9 +1075,20 @@ export default function ProductDetailPage() {
                         <h3 className="text-xs font-bold uppercase text-black group-hover:underline line-clamp-1">
                           {rel.name}
                         </h3>
-                        <p className="font-mono text-xs font-bold text-black">
-                          LKR {Number(rel.basePrice).toLocaleString()}
-                        </p>
+                        {rel.isOnSale && rel.salePrice && rel.salePrice < rel.basePrice ? (
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-mono text-xs font-bold text-red-600">
+                              LKR {Number(rel.salePrice).toLocaleString()}
+                            </span>
+                            <span className="font-mono text-[10px] text-neutral-400 line-through">
+                              LKR {Number(rel.basePrice).toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="font-mono text-xs font-bold text-black">
+                            LKR {Number(rel.basePrice).toLocaleString()}
+                          </p>
+                        )}
                       </div>
                     </Link>
                   );
@@ -1203,6 +1284,18 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Restock Notification Waitlist Modal */}
+      <RestockWaitlistModal
+        isOpen={isWaitlistModalOpen}
+        onClose={() => setIsWaitlistModalOpen(false)}
+        product={product}
+        initialSize={selectedSize}
+        initialColor={selectedColor}
+        onSuccess={(prodId) => {
+          setWaitlistedIds((prev) => (prev.includes(prodId) ? prev : [...prev, prodId]));
+        }}
+      />
 
       <Footer />
     </div>

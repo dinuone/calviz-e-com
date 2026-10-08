@@ -150,7 +150,7 @@ export default function AccountPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 font-bold">
-                    VERIFIED CLIENT ATELIER ID
+                    CALVIZ MEMBER ACCOUNT
                   </span>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 </div>
@@ -166,7 +166,7 @@ export default function AccountPage() {
                 href="/products"
                 className="px-4 py-2 bg-neutral-900 border border-neutral-700 hover:border-white text-white text-xs font-mono font-bold uppercase rounded-xl transition-all"
               >
-                BROWSE CAPSULE →
+                SHOP ALL PRODUCTS →
               </Link>
               <button
                 type="button"
@@ -506,38 +506,38 @@ export default function AccountPage() {
             <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                  ACTIVE PRIVILEGE
+                  ACTIVE DISCOUNT
                 </span>
-                <span className="font-mono text-xs text-neutral-500 font-bold">10% PRIVILEGE</span>
+                <span className="font-mono text-xs text-neutral-500 font-bold">10% OFF</span>
               </div>
               <h3 className="text-lg font-black uppercase text-black tracking-tight font-mono">
-                DUO ARCHIVE CAPSULE
+                BUY 2+ TEES DISCOUNT
               </h3>
               <p className="text-xs text-neutral-600 leading-relaxed font-medium">
-                Save 10% on any 2 or more heavyweight garments across Drop 01. Stacks automatically with island-wide complimentary dispatch.
+                Save 10% on any 2 or more items. Free island-wide delivery on orders over LKR 10,000.
               </p>
               <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-between font-mono">
                 <span className="text-sm font-black text-black">CALVIZ10</span>
-                <span className="text-[10px] text-neutral-500 font-bold">MIN 2 GARMENTS</span>
+                <span className="text-[10px] text-neutral-500 font-bold">MIN 2 ITEMS</span>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
-                  VIP ALLOCATION
+                  SPECIAL DISCOUNT
                 </span>
                 <span className="font-mono text-xs text-neutral-500 font-bold">LKR 1,500 OFF</span>
               </div>
               <h3 className="text-lg font-black uppercase text-black tracking-tight font-mono">
-                DROP 01 PRIVILEGE PASS
+                DISCOUNT VOUCHER
               </h3>
               <p className="text-xs text-neutral-600 leading-relaxed font-medium">
-                Flat LKR 1,500 privilege discount for registered atelier clients on orders with 2 or more items.
+                Flat LKR 1,500 discount for members on orders with 2 or more items.
               </p>
               <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl flex items-center justify-between font-mono">
                 <span className="text-sm font-black text-black">CALVIZ1500</span>
-                <span className="text-[10px] text-neutral-500 font-bold">1 USE / CLIENT</span>
+                <span className="text-[10px] text-neutral-500 font-bold">1 USE / CUSTOMER</span>
               </div>
             </div>
           </div>

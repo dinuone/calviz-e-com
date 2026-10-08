@@ -156,7 +156,7 @@ export default function Header() {
                   useAuthModalStore.getState().openModal({
                     tab: "login",
                     title: "SIGN IN FOR WISHLIST",
-                    description: "Sign in to access your private saved wishlist and capsule items.",
+                    description: "Sign in to access your saved wishlist and favorite items.",
                   });
                 } else {
                   const el = document.getElementById("catalog");
@@ -256,14 +256,14 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
               >
-                ABOUT ATELIER
+                ABOUT CALVIZ
               </Link>
               <Link
                 href="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
               >
-                CONTACT CLIENT DESK
+                CONTACT US
               </Link>
               <Link
                 href="/track"
@@ -271,7 +271,7 @@ export default function Header() {
                 className="flex items-center gap-2 p-3 rounded-lg hover:bg-neutral-100 text-neutral-900 hover:text-black font-bold transition-colors"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>TRACK CONSIGNMENT</span>
+                <span>TRACK ORDER</span>
               </Link>
 
               <div className="pt-4 mt-4 border-t border-neutral-200">
@@ -282,14 +282,14 @@ export default function Header() {
                   className="flex items-center gap-2 p-3 rounded-xl bg-[#25D366]/10 text-[#075E54] border border-[#25D366]/30 font-bold transition-colors"
                 >
                   <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
-                  <span>VIP WhatsApp (+94 70 490 1027)</span>
+                  <span>WhatsApp Support (+94 70 490 1027)</span>
                 </a>
               </div>
             </div>
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-neutral-200 bg-neutral-50 text-[10px] font-mono text-neutral-500 text-center">
-              COLOMBO FLAGSHIP ATELIER // 24H DELIVERY
+              COLOMBO HUB // 24H DELIVERY
             </div>
           </div>
         </div>
