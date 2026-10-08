@@ -112,8 +112,15 @@ const getProductMetrics = (product: ProductSummary) => {
   let badge = "NEW ARRIVAL";
   if (isOutOfStock) {
     badge = "SOLD OUT";
+  } else if (product.isOnSale && product.salePrice && product.salePrice < product.basePrice) {
+    const discount = Math.round(((product.basePrice - product.salePrice) / product.basePrice) * 100);
+    badge = `SALE -${discount}%`;
   } else if (isUrgent) {
     badge = "FEW UNITS LEFT";
+  } else if (product.isBestSeller) {
+    badge = "🔥 BESTSELLER";
+  } else if (product.isNewArrival) {
+    badge = "✨ NEW DROP";
   } else if (product.isFeatured) {
     badge =
       product.categorySlug === "heavyweight-basics"
@@ -199,12 +206,12 @@ function HomeProductCard({
     const discountPct = Math.round(((product.basePrice - product.salePrice) / product.basePrice) * 100);
     badgeText = `🏷️ SALE (-${discountPct}%)`;
     badgeClass = "bg-red-600 text-white border-red-700 font-bold";
-  } else if (sectionType === "new-arrival") {
-    badgeText = "NEW DROP";
-    badgeClass = "bg-black text-white border-black";
-  } else if (sectionType === "best-seller") {
+  } else if (sectionType === "best-seller" || product.isBestSeller) {
     badgeText = "🔥 BESTSELLER";
     badgeClass = "bg-neutral-900 text-amber-400 border-neutral-800";
+  } else if (sectionType === "new-arrival" || product.isNewArrival) {
+    badgeText = "✨ NEW DROP";
+    badgeClass = "bg-black text-white border-black";
   } else if (sectionType === "sale") {
     badgeText = "10% DUO BUNDLE";
     badgeClass = "bg-red-600 text-white border-red-700 font-bold";
@@ -682,15 +689,21 @@ export default function HomePage() {
     );
   }, []);
 
-  // 1. New Arrivals: Fresh releases
+  // 1. New Arrivals: Fresh releases (explicitly curated via admin, or all if none curated yet)
   const newArrivalsProducts = useMemo(() => {
-    return products.filter((p) => matchesCategory(p, newArrivalsCategory));
+    const curated = products.filter((p) => p.isNewArrival);
+    const pool = curated.length > 0 ? curated : products;
+    return pool.filter((p) => matchesCategory(p, newArrivalsCategory));
   }, [products, newArrivalsCategory, matchesCategory]);
 
-  // 2. Best Selling: Prioritizes featured and high-demand pieces
+  // 2. Best Selling: Prioritizes explicitly curated best sellers, or featured/popular pieces
   const bestSellingProducts = useMemo(() => {
-    const list = products.filter((p) => matchesCategory(p, bestSellingCategory));
+    const curated = products.filter((p) => p.isBestSeller);
+    const pool = curated.length > 0 ? curated : products;
+    const list = pool.filter((p) => matchesCategory(p, bestSellingCategory));
     return [...list].sort((a, b) => {
+      if (a.isBestSeller && !b.isBestSeller) return -1;
+      if (!a.isBestSeller && b.isBestSeller) return 1;
       if (a.isFeatured && !b.isFeatured) return -1;
       if (!a.isFeatured && b.isFeatured) return 1;
       return (a.totalStock ?? 0) - (b.totalStock ?? 0);
@@ -841,8 +854,15 @@ export default function HomePage() {
     let badge = "NEW ARRIVAL";
     if (isOutOfStock) {
       badge = "SOLD OUT";
+    } else if (product.isOnSale && product.salePrice && product.salePrice < product.basePrice) {
+      const discount = Math.round(((product.basePrice - product.salePrice) / product.basePrice) * 100);
+      badge = `SALE -${discount}%`;
     } else if (isUrgent) {
       badge = "FEW UNITS LEFT";
+    } else if (product.isBestSeller) {
+      badge = "🔥 BESTSELLER";
+    } else if (product.isNewArrival) {
+      badge = "✨ NEW DROP";
     } else if (product.isFeatured) {
       badge =
         product.categorySlug === "heavyweight-basics"

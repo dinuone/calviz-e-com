@@ -380,6 +380,16 @@ export default function ProductDetailPage() {
                       <span>(-{Math.round(((Number(product.basePrice) - Number(product.salePrice)) / Number(product.basePrice)) * 100)}%)</span>
                     </div>
                   )}
+                  {product.isNewArrival && (
+                    <div className="bg-black text-white font-mono text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded shadow-sm flex items-center gap-1 border border-neutral-700">
+                      <span>✨ NEW DROP</span>
+                    </div>
+                  )}
+                  {product.isBestSeller && (
+                    <div className="bg-neutral-900 text-amber-400 font-mono text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded shadow-sm flex items-center gap-1 border border-neutral-800">
+                      <span>🔥 BEST SELLER</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Spec Tags */}

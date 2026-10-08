@@ -320,6 +320,10 @@ function ShopProductsContent() {
       badge = `SALE -${discount}%`;
     } else if (isUrgent) {
       badge = "FEW UNITS LEFT";
+    } else if (product.isBestSeller) {
+      badge = "🔥 BESTSELLER";
+    } else if (product.isNewArrival) {
+      badge = "✨ NEW DROP";
     } else if (product.isFeatured) {
       badge = "FEATURED";
     }

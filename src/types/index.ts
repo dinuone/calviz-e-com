@@ -35,6 +35,8 @@ export interface ProductSummary {
   basePrice: number;
   isOnSale?: boolean;
   salePrice?: number | null;
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
   gsm?: number;
   lowStockThreshold?: number;
   isFeatured: boolean;
@@ -85,6 +87,8 @@ export interface ProductDetail {
   basePrice: number;
   isOnSale?: boolean;
   salePrice?: number | null;
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
   gsm: number;
   lowStockThreshold?: number;
   isFeatured: boolean;
