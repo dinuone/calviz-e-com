@@ -75,12 +75,7 @@ export default function Header() {
 
             {/* Desktop Nav Links */}
             <nav className="hidden lg:flex items-center gap-5 xl:gap-8 ml-4">
-              <Link
-                href="/"
-                className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors"
-              >
-                NEW DROPS
-              </Link>
+
               <Link
                 href="/products"
                 className="text-[13px] font-mono uppercase tracking-wider font-semibold text-neutral-700 hover:text-black transition-colors"

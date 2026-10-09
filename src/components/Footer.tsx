@@ -32,7 +32,7 @@ export default function Footer() {
               <div className="flex flex-wrap items-center gap-2.5">
                 {/* Facebook */}
                 <a
-                  href="https://www.facebook.com/share/1FpUSPmWLu/?mibextid=wwXIfr"
+                  href="https://web.facebook.com/profile.php?id=61583053942508"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="CALVIZ on Facebook"
