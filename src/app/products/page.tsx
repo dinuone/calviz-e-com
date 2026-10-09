@@ -20,6 +20,8 @@ import {
   Heart,
   Layers,
   Sparkles,
+  Flame,
+  Tag,
   ArrowRight,
   Check,
   RotateCcw,
@@ -44,6 +46,7 @@ function ShopProductsContent() {
   const initialSize = searchParams.get("size") || "all";
   const initialColor = searchParams.get("color") || "all";
   const initialSort = searchParams.get("sort") || "featured";
+  const initialFilter = (searchParams.get("filter") || "all") as "all" | "new-arrivals" | "best-selling" | "sale";
 
   // Data State
   const [products, setProducts] = useState<ProductSummary[]>([]);
@@ -52,6 +55,7 @@ function ShopProductsContent() {
   const [loading, setLoading] = useState(true);
 
   // Filter & Search State
+  const [selectedCurated, setSelectedCurated] = useState<"all" | "new-arrivals" | "best-selling" | "sale">(initialFilter);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCat);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [selectedSize, setSelectedSize] = useState<string>(initialSize);
@@ -133,6 +137,7 @@ function ShopProductsContent() {
   // Update URL Query params on filter changes
   useEffect(() => {
     const params = new URLSearchParams();
+    if (selectedCurated && selectedCurated !== "all") params.set("filter", selectedCurated);
     if (selectedCategory && selectedCategory !== "all") params.set("category", selectedCategory);
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
     if (selectedSize && selectedSize !== "all") params.set("size", selectedSize);
@@ -142,7 +147,7 @@ function ShopProductsContent() {
     const queryString = params.toString();
     const newUrl = queryString ? `/products?${queryString}` : "/products";
     router.replace(newUrl, { scroll: false });
-  }, [selectedCategory, searchQuery, selectedSize, selectedColor, sortBy, router]);
+  }, [selectedCurated, selectedCategory, searchQuery, selectedSize, selectedColor, sortBy, router]);
 
   // All available unique sizes across catalog
   const availableSizesList = useMemo(() => {
@@ -162,6 +167,11 @@ function ShopProductsContent() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
+        // Curated Collection Filter (New Arrivals, Best Selling, Sale)
+        if (selectedCurated === "new-arrivals" && !p.isNewArrival) return false;
+        if (selectedCurated === "best-selling" && !p.isBestSeller) return false;
+        if (selectedCurated === "sale" && !(p.isOnSale && p.salePrice && p.salePrice < p.basePrice)) return false;
+
         // Category Filter
         if (selectedCategory !== "all") {
           const sel = selectedCategory.toLowerCase();
@@ -223,13 +233,30 @@ function ShopProductsContent() {
         if (sortBy === "price-low") return priceA - priceB;
         if (sortBy === "price-high") return priceB - priceA;
         if (sortBy === "gsm-high") return (b.gsm || 0) - (a.gsm || 0);
-        if (sortBy === "newest") return b.slug.localeCompare(a.slug);
+        if (sortBy === "bestselling") {
+          if (a.isBestSeller && !b.isBestSeller) return -1;
+          if (!a.isBestSeller && b.isBestSeller) return 1;
+          return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+        }
+        if (sortBy === "sale") {
+          const discountPctA = a.isOnSale && a.salePrice && a.salePrice < a.basePrice
+            ? ((a.basePrice - a.salePrice) / a.basePrice) : 0;
+          const discountPctB = b.isOnSale && b.salePrice && b.salePrice < b.basePrice
+            ? ((b.basePrice - b.salePrice) / b.basePrice) : 0;
+          return discountPctB - discountPctA;
+        }
+        if (sortBy === "newest") {
+          if (a.isNewArrival && !b.isNewArrival) return -1;
+          if (!a.isNewArrival && b.isNewArrival) return 1;
+          return b.slug.localeCompare(a.slug);
+        }
         return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
       });
-  }, [products, selectedCategory, searchQuery, selectedSize, selectedColor, inStockOnly, priceLimit, sortBy]);
+  }, [products, selectedCurated, selectedCategory, searchQuery, selectedSize, selectedColor, inStockOnly, priceLimit, sortBy]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    if (selectedCurated !== "all") count++;
     if (selectedCategory !== "all") count++;
     if (searchQuery.trim()) count++;
     if (selectedSize !== "all") count++;
@@ -237,9 +264,10 @@ function ShopProductsContent() {
     if (inStockOnly) count++;
     if (priceLimit < 15000) count++;
     return count;
-  }, [selectedCategory, searchQuery, selectedSize, selectedColor, inStockOnly, priceLimit]);
+  }, [selectedCurated, selectedCategory, searchQuery, selectedSize, selectedColor, inStockOnly, priceLimit]);
 
   const handleResetFilters = () => {
+    setSelectedCurated("all");
     setSelectedCategory("all");
     setSearchQuery("");
     setSelectedSize("all");
@@ -406,6 +434,76 @@ function ShopProductsContent() {
             </div>
           </div>
 
+          {/* Curated Drops Quick Filter */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-mono uppercase text-neutral-500 block">Curated Drops</label>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCurated("all")}
+                className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded transition-colors flex items-center justify-between ${
+                  selectedCurated === "all"
+                    ? "bg-black text-white font-bold"
+                    : "text-neutral-700 hover:bg-neutral-100"
+                }`}
+              >
+                <span>All Drops</span>
+                <span className="text-[10px] opacity-70">{products.length}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCurated("new-arrivals")}
+                className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded transition-colors flex items-center justify-between ${
+                  selectedCurated === "new-arrivals"
+                    ? "bg-black text-white font-bold"
+                    : "text-neutral-700 hover:bg-neutral-100"
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                  New Arrivals
+                </span>
+                <span className="text-[10px] opacity-70">
+                  {products.filter((p) => p.isNewArrival).length}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCurated("best-selling")}
+                className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded transition-colors flex items-center justify-between ${
+                  selectedCurated === "best-selling"
+                    ? "bg-black text-white font-bold"
+                    : "text-neutral-700 hover:bg-neutral-100"
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  Best Selling
+                </span>
+                <span className="text-[10px] opacity-70">
+                  {products.filter((p) => p.isBestSeller).length}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCurated("sale")}
+                className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded transition-colors flex items-center justify-between ${
+                  selectedCurated === "sale"
+                    ? "bg-red-600 text-white font-bold"
+                    : "text-red-600 hover:bg-red-50"
+                }`}
+              >
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Tag className="w-3.5 h-3.5 text-red-500" />
+                  On Sale
+                </span>
+                <span className="text-[10px] font-bold">
+                  {products.filter((p) => p.isOnSale && p.salePrice && p.salePrice < p.basePrice).length}
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Category Filter */}
           <div className="space-y-2">
             <label className="text-[11px] font-mono uppercase text-neutral-500 block">Category</label>
@@ -544,6 +642,20 @@ function ShopProductsContent() {
               </span>
 
               {/* Active Filter Chips */}
+              {selectedCurated !== "all" && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-black text-white text-[11px] font-mono uppercase font-bold">
+                  <span>
+                    {selectedCurated === "new-arrivals"
+                      ? "✨ New Arrivals"
+                      : selectedCurated === "best-selling"
+                      ? "🔥 Best Selling"
+                      : "🏷️ On Sale"}
+                  </span>
+                  <button onClick={() => setSelectedCurated("all")} className="hover:opacity-75">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
               {selectedCategory !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 text-black text-[11px] font-mono uppercase">
                   <span>Cat: {selectedCategory}</span>
@@ -580,10 +692,12 @@ function ShopProductsContent() {
                   className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 text-xs font-mono uppercase text-neutral-900 focus:outline-none focus:border-black"
                 >
                   <option value="featured">Featured / Curated</option>
+                  <option value="newest">Newest Drops First</option>
+                  <option value="bestselling">Best Sellers First</option>
+                  <option value="sale">Biggest Discount First</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                   <option value="gsm-high">Heaviest Weave First</option>
-                  <option value="newest">Newest Drops First</option>
                 </select>
               </div>
 
@@ -606,6 +720,72 @@ function ShopProductsContent() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Quick Curated Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button
+              type="button"
+              onClick={() => setSelectedCurated("all")}
+              className={`px-3.5 py-1.5 text-xs font-mono uppercase whitespace-nowrap transition-all border ${
+                selectedCurated === "all"
+                  ? "bg-black text-white border-black font-bold shadow-xs"
+                  : "bg-white text-neutral-700 border-neutral-200 hover:border-black hover:text-black"
+              }`}
+            >
+              All Drops ({products.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCurated("new-arrivals")}
+              className={`px-3.5 py-1.5 text-xs font-mono uppercase whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                selectedCurated === "new-arrivals"
+                  ? "bg-black text-white border-black font-bold shadow-xs"
+                  : "bg-white text-neutral-700 border-neutral-200 hover:border-black hover:text-black"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              <span>New Arrivals</span>
+              <span className={`text-[10px] px-1.5 py-0.2 ${
+                selectedCurated === "new-arrivals" ? "bg-neutral-800 text-white" : "bg-neutral-100 text-neutral-700"
+              }`}>
+                {products.filter((p) => p.isNewArrival).length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCurated("best-selling")}
+              className={`px-3.5 py-1.5 text-xs font-mono uppercase whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                selectedCurated === "best-selling"
+                  ? "bg-black text-white border-black font-bold shadow-xs"
+                  : "bg-white text-neutral-700 border-neutral-200 hover:border-black hover:text-black"
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-500" />
+              <span>Best Selling</span>
+              <span className={`text-[10px] px-1.5 py-0.2 ${
+                selectedCurated === "best-selling" ? "bg-neutral-800 text-white" : "bg-neutral-100 text-neutral-700"
+              }`}>
+                {products.filter((p) => p.isBestSeller).length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCurated("sale")}
+              className={`px-3.5 py-1.5 text-xs font-mono uppercase whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                selectedCurated === "sale"
+                  ? "bg-red-600 text-white border-red-700 font-bold shadow-xs"
+                  : "bg-white text-red-600 border-red-200 hover:border-red-600 hover:bg-red-50"
+              }`}
+            >
+              <Tag className="w-3.5 h-3.5 text-red-500" />
+              <span>On Sale</span>
+              <span className={`text-[10px] px-1.5 py-0.2 ${
+                selectedCurated === "sale" ? "bg-red-700 text-white" : "bg-red-100 text-red-700 font-bold"
+              }`}>
+                {products.filter((p) => p.isOnSale && p.salePrice && p.salePrice < p.basePrice).length}
+              </span>
+            </button>
           </div>
 
           {/* Loading State */}
@@ -857,6 +1037,62 @@ function ShopProductsContent() {
                 >
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Curated Drops (Mobile) */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-mono uppercase text-neutral-500 block">Curated Drops</span>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCurated("all")}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded flex items-center justify-between ${
+                      selectedCurated === "all" ? "bg-black text-white font-bold" : "text-neutral-700 bg-neutral-50"
+                    }`}
+                  >
+                    <span>All Drops</span>
+                    <span>{products.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCurated("new-arrivals")}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded flex items-center justify-between ${
+                      selectedCurated === "new-arrivals" ? "bg-black text-white font-bold" : "text-neutral-700 bg-neutral-50"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                      New Arrivals
+                    </span>
+                    <span>{products.filter((p) => p.isNewArrival).length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCurated("best-selling")}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded flex items-center justify-between ${
+                      selectedCurated === "best-selling" ? "bg-black text-white font-bold" : "text-neutral-700 bg-neutral-50"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 text-amber-500" />
+                      Best Selling
+                    </span>
+                    <span>{products.filter((p) => p.isBestSeller).length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCurated("sale")}
+                    className={`w-full text-left px-3 py-2 text-xs font-mono uppercase rounded flex items-center justify-between ${
+                      selectedCurated === "sale" ? "bg-red-600 text-white font-bold" : "text-red-600 bg-red-50 font-bold"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-red-500" />
+                      On Sale
+                    </span>
+                    <span>{products.filter((p) => p.isOnSale && p.salePrice && p.salePrice < p.basePrice).length}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Categories */}
