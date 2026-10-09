@@ -178,9 +178,6 @@ function HomeProductCard({
     product.availableSizes?.[0] ||
     "M";
 
-  const subtitle = `${product.categoryName || "Premium Edition"} // ${product.availableColors?.[0] || "Standard Dye"
-    }`;
-
   const displayImageUrl =
     product.primaryImageUrl ||
     product.images?.find((img) => img.isPrimary)?.imageUrl ||
@@ -349,14 +346,6 @@ function HomeProductCard({
             )}
           </div>
 
-          <p className="text-xs text-neutral-600 mt-1 font-normal">{subtitle}</p>
-
-          <div className="flex items-center gap-1 mt-2 text-neutral-600 font-mono text-[10px] font-medium">
-            <span className="text-black font-semibold">HEAVYWEIGHT</span>
-            <span>•</span>
-            <span>100% COMBED COTTON</span>
-          </div>
-
           {/* Estimated Delivery Time SLA Badge */}
           <div className="flex items-center justify-between px-2.5 py-1.5 mt-2.5 bg-neutral-900 text-white rounded font-mono text-[10px] tracking-tight shadow-xs border border-neutral-800">
             <div className="flex items-center gap-1.5">
@@ -483,10 +472,6 @@ export default function HomePage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // 3 Section Category Filter States
-  const [newArrivalsCategory, setNewArrivalsCategory] = useState("all");
-  const [bestSellingCategory, setBestSellingCategory] = useState("all");
-  const [saleCategory, setSaleCategory] = useState("all");
 
   // Track Refs for Carousel Scrolling
   const newArrivalsTrackRef = useRef<HTMLDivElement>(null);
@@ -670,52 +655,30 @@ export default function HomePage() {
     loadProducts();
   }, [loadProducts]);
 
-  // Helper to match category selection
-  const matchesCategory = useCallback((p: ProductSummary, cat: string) => {
-    if (cat === "all") return true;
-    if (cat === "featured") return p.isFeatured;
-    const slug = cat.toLowerCase();
-    return (
-      p.categorySlug?.toLowerCase() === slug ||
-      p.categoryId?.toLowerCase() === slug ||
-      p.categories?.some(
-        (c) =>
-          c.slug?.toLowerCase() === slug ||
-          c.id?.toLowerCase() === slug ||
-          c.name?.toLowerCase() === slug
-      ) ||
-      p.categoryIds?.includes(cat) ||
-      false
-    );
-  }, []);
-
   // 1. New Arrivals: Fresh releases (explicitly curated via admin, or all if none curated yet)
   const newArrivalsProducts = useMemo(() => {
     const curated = products.filter((p) => p.isNewArrival);
-    const pool = curated.length > 0 ? curated : products;
-    return pool.filter((p) => matchesCategory(p, newArrivalsCategory));
-  }, [products, newArrivalsCategory, matchesCategory]);
+    return curated.length > 0 ? curated : products;
+  }, [products]);
 
   // 2. Best Selling: Prioritizes explicitly curated best sellers, or featured/popular pieces
   const bestSellingProducts = useMemo(() => {
     const curated = products.filter((p) => p.isBestSeller);
     const pool = curated.length > 0 ? curated : products;
-    const list = pool.filter((p) => matchesCategory(p, bestSellingCategory));
-    return [...list].sort((a, b) => {
+    return [...pool].sort((a, b) => {
       if (a.isBestSeller && !b.isBestSeller) return -1;
       if (!a.isBestSeller && b.isBestSeller) return 1;
       if (a.isFeatured && !b.isFeatured) return -1;
       if (!a.isFeatured && b.isFeatured) return 1;
       return (a.totalStock ?? 0) - (b.totalStock ?? 0);
     });
-  }, [products, bestSellingCategory, matchesCategory]);
+  }, [products]);
 
   // 3. Sale Items: Products on sale (or all products if none explicitly marked on sale)
   const saleProducts = useMemo(() => {
     const onSale = products.filter((p) => p.isOnSale && p.salePrice && p.salePrice < p.basePrice);
-    const pool = onSale.length > 0 ? onSale : products;
-    return pool.filter((p) => matchesCategory(p, saleCategory));
-  }, [products, saleCategory, matchesCategory]);
+    return onSale.length > 0 ? onSale : products;
+  }, [products]);
 
   // 3. Auto-play Carousel
   useEffect(() => {
@@ -1156,7 +1119,7 @@ export default function HomePage() {
                   </h2>
                 </div>
 
-                <div className="mt-4 md:mt-0 flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="mt-4 md:mt-0 flex items-center gap-2 sm:gap-3">
                   <span className="font-mono text-[11px] text-neutral-600 font-medium hidden sm:inline">
                     {loadingProducts
                       ? "LOADING PRODUCTS..."
@@ -1177,42 +1140,6 @@ export default function HomePage() {
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Filter Pills */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      onClick={() => setNewArrivalsCategory("all")}
-                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${newArrivalsCategory === "all"
-                          ? "bg-black text-white"
-                          : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
-                        }`}
-                    >
-                      ALL NEW DROPS
-                    </button>
-
-                    <button
-                      onClick={() => setNewArrivalsCategory("featured")}
-                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${newArrivalsCategory === "featured"
-                          ? "bg-black text-white"
-                          : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
-                        }`}
-                    >
-                      FEATURED
-                    </button>
-
-                    {categories.map((cat) => (
-                      <button
-                        key={`new-${cat.id}`}
-                        onClick={() => setNewArrivalsCategory(cat.slug)}
-                        className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${newArrivalsCategory === cat.slug
-                            ? "bg-black text-white"
-                            : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
-                          }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -1267,7 +1194,7 @@ export default function HomePage() {
 
               {!loadingProducts && newArrivalsProducts.length === 0 && (
                 <div className="text-center py-12 text-neutral-500 font-mono text-xs">
-                  No new arrivals found in this category.
+                  No new arrivals found.
                 </div>
               )}
 
@@ -1310,7 +1237,7 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="mt-4 md:mt-0 flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="mt-4 md:mt-0 flex items-center gap-2 sm:gap-3">
                   <span className="font-mono text-[11px] text-neutral-600 font-medium hidden sm:inline">
                     {loadingProducts
                       ? "LOADING PRODUCTS..."
@@ -1331,42 +1258,6 @@ export default function HomePage() {
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Filter Pills */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      onClick={() => setBestSellingCategory("all")}
-                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${bestSellingCategory === "all"
-                          ? "bg-black text-white"
-                          : "bg-white border border-neutral-200 text-black hover:bg-neutral-100"
-                        }`}
-                    >
-                      ALL BEST SELLERS
-                    </button>
-
-                    <button
-                      onClick={() => setBestSellingCategory("featured")}
-                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${bestSellingCategory === "featured"
-                          ? "bg-black text-white"
-                          : "bg-white border border-neutral-200 text-black hover:bg-neutral-100"
-                        }`}
-                    >
-                      FEATURED
-                    </button>
-
-                    {categories.map((cat) => (
-                      <button
-                        key={`best-${cat.id}`}
-                        onClick={() => setBestSellingCategory(cat.slug)}
-                        className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${bestSellingCategory === cat.slug
-                            ? "bg-black text-white"
-                            : "bg-white border border-neutral-200 text-black hover:bg-neutral-100"
-                          }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -1408,7 +1299,7 @@ export default function HomePage() {
 
               {!loadingProducts && bestSellingProducts.length === 0 && (
                 <div className="text-center py-12 text-neutral-500 font-mono text-xs">
-                  No best sellers found in this category.
+                  No best sellers found.
                 </div>
               )}
 
@@ -1491,7 +1382,7 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="mt-4 md:mt-0 flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="mt-4 md:mt-0 flex items-center gap-2 sm:gap-3">
                   <span className="font-mono text-[11px] text-neutral-600 font-medium hidden sm:inline">
                     {loadingProducts
                       ? "LOADING PRODUCTS..."
@@ -1512,42 +1403,6 @@ export default function HomePage() {
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Filter Pills */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
-                      onClick={() => setSaleCategory("all")}
-                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${saleCategory === "all"
-                          ? "bg-red-600 text-white"
-                          : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
-                        }`}
-                    >
-                      ALL SALE ITEMS
-                    </button>
-
-                    <button
-                      onClick={() => setSaleCategory("featured")}
-                      className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${saleCategory === "featured"
-                          ? "bg-red-600 text-white"
-                          : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
-                        }`}
-                    >
-                      FEATURED
-                    </button>
-
-                    {categories.map((cat) => (
-                      <button
-                        key={`sale-${cat.id}`}
-                        onClick={() => setSaleCategory(cat.slug)}
-                        className={`px-3 py-1.5 font-mono text-[11px] uppercase transition-colors rounded font-bold cursor-pointer ${saleCategory === cat.slug
-                            ? "bg-red-600 text-white"
-                            : "bg-neutral-100 border border-neutral-200 text-black hover:bg-neutral-200"
-                          }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -1589,7 +1444,7 @@ export default function HomePage() {
 
               {!loadingProducts && saleProducts.length === 0 && (
                 <div className="text-center py-12 text-neutral-500 font-mono text-xs">
-                  No sale items found in this category.
+                  No sale items found.
                 </div>
               )}
 

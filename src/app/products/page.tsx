@@ -901,7 +901,7 @@ function ShopProductsContent() {
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block">
-                              {product.categoryName || "HEAVYWEIGHT STREETWEAR"}
+                              {product.categoryName || "CALVIZ"}
                             </span>
                             <Link href={`/products/${product.slug}`}>
                               <h3 className="text-sm font-bold text-neutral-950 uppercase tracking-tight hover:underline line-clamp-1 mt-0.5">
